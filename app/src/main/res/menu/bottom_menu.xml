@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_home"
+        android:title="Home"
+        android:icon="@drawable/baseline_home_24"/>
+
+    <item
+        android:id="@+id/nav_analysis"
+        android:title="Analysis"
+        android:icon="@drawable/baseline_bar_chart_24"/>
+
+    <item
+        android:id="@+id/fab"
+        android:title=""
+        android:enabled="true"/>
+
+    <item
+        android:id="@+id/nav_investments"
+        android:title="Investments"
+        android:icon="@drawable/baseline_investment_on_24"/>
+
+    <item
+        android:id="@+id/nav_chatbot"
+        android:title="Chatbot"
+        android:icon="@drawable/baseline_chatbot_24"/>
+
+
+</menu>
