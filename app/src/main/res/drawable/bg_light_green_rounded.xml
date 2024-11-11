@@ -1,0 +1,5 @@
+<!-- res/drawable/bg_light_green_rounded.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#C8E6C9"/> <!-- Use a light green color for transaction items -->
+    <corners android:radius="12dp"/> <!-- Rounded corners -->
+</shape>

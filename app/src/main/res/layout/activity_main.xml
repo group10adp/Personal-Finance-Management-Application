@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/main"
+    android:fitsSystemWindows="false"
     tools:context=".MainActivity">
 
     <!-- Main Content -->
@@ -19,7 +20,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center|bottom"
-        android:layout_marginBottom="56dp"
+        android:layout_marginBottom="75dp"
         android:src="@drawable/baseline_add_24"
         app:fabSize="normal"
         app:layout_anchor="@id/bottom_navigation"
@@ -31,6 +32,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        app:menu="@menu/bottom_menu" />
+        android:elevation="0dp"
+        android:layout_margin="0dp"
+        android:padding="0dp"
+        app:menu="@menu/bottom_menu"
+        app:itemIconSize="24dp"
+        app:itemPadding="0dp" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

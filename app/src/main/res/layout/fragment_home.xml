@@ -1,17 +1,122 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/nav_home"
-    tools:context=".HomeFragment">
+    android:padding="16dp">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="Home"
-        android:gravity="center"
-        android:textSize="30sp" />
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-</FrameLayout>
+        <!-- Greeting and Profile Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+<!--            android:gravity="space_between">-->
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/time"
+                android:text="Good Evening"
+                android:textSize="18sp"
+                android:textColor="@android:color/black"
+                android:layout_marginEnd="8dp" />
+
+            <!-- Second TextView for the name -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Parthib"
+                android:textSize="24sp"
+                android:textColor="@android:color/black"
+                android:textStyle="bold" />
+
+            <!-- Profile Icon -->
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginRight="20dp"
+                android:src="@drawable/baseline_account_circle_24"
+                android:layout_gravity="end"/>
+        </LinearLayout>
+
+        <!-- This Month Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="This month"
+            android:textSize="20sp"
+            android:textColor="@android:color/black"
+            android:layout_marginTop="16dp" />
+
+        <!-- Spending and Income Indicators -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="8dp">
+
+            <!-- Spending -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/bg_red_rounded"
+                android:padding="16dp"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Spending\n₹0.00"
+                    android:textAlignment="center"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/white" />
+            </LinearLayout>
+
+            <!-- Income -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/bg_green_rounded"
+                android:padding="16dp"
+                android:gravity="center"
+                android:layout_marginStart="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Income\n₹1,198"
+                    android:textAlignment="center"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/white" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Balance Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_gray_rounded"
+            android:padding="8dp"
+            android:text="Balance: ₹1,198"
+            android:textSize="16sp"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"
+            android:textColor="@android:color/black" />
+
+        <!-- Recent Transactions Section -->
+
+
+
+        <!-- Your Budgets Section -->
+
+
+    </LinearLayout>
+</ScrollView>
