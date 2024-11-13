@@ -1,5 +1,5 @@
 <!-- res/drawable/bg_red_rounded.xml -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <solid android:color="#E53935"/> <!-- Use a red color -->
-    <corners android:radius="16dp"/> <!-- Rounded corners -->
+    <corners android:radius="42dp"/> <!-- Rounded corners -->
 </shape>
