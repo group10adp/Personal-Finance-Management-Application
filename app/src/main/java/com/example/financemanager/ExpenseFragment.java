@@ -1,107 +1,99 @@
 package com.example.financemanager;
 
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.app.DatePickerDialog;
-import android.app.TimePickerDialog;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Locale;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class ExpenseFragment extends Fragment {
 
-    private TextView dateText;
-    private TextView timeText;
+    private EditText amountEditText;
+    private Button saveButton;
+    private DatabaseReference expenseRef, totalExpenseRef;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // Inflate the layout
         View view = inflater.inflate(R.layout.fragment_expense, container, false);
 
-        // Initialize the views
-        dateText = view.findViewById(R.id.dateText);
-        timeText = view.findViewById(R.id.timeText);
-        String currentDate = getCurrentDate();
-        dateText.setText(currentDate);
-        String currentTime = getCurrentTime();
-        timeText.setText(currentTime);
+        // Initialize views
+        amountEditText = view.findViewById(R.id.amountEditText);
+        saveButton = view.findViewById(R.id.saveButton);
 
-        ImageView dateIcon = view.findViewById(R.id.dateIcon);
-        ImageView timeIcon = view.findViewById(R.id.timeIcon);
+        // Initialize Firebase Database references
+        expenseRef = FirebaseDatabase.getInstance().getReference("user").child("user1").child("expense");
+        totalExpenseRef = FirebaseDatabase.getInstance().getReference("user").child("user1").child("totalExpense");
 
-        // Set click listeners for date and time icons
-        dateIcon.setOnClickListener(v -> showDatePicker());
-        dateText.setOnClickListener(v -> showDatePicker());
-        timeIcon.setOnClickListener(v -> showTimePicker());
-        timeText.setOnClickListener(v -> showTimePicker());
-        // Return the inflated view
+        // Set click listener on save button
+        saveButton.setOnClickListener(v -> saveExpense());
+
         return view;
     }
 
-    private void showDatePicker() {
-        Calendar calendar = Calendar.getInstance();
-        int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH);
-        int day = calendar.get(Calendar.DAY_OF_MONTH);
+    private void saveExpense() {
+        String amountStr = amountEditText.getText().toString().trim();
 
-        DatePickerDialog datePickerDialog = new DatePickerDialog(
-                getContext(),
-                (view, selectedYear, selectedMonth, selectedDay) -> {
-                    // Update the TextView with the selected date
-                    dateText.setText(String.format("%d %s %d", selectedDay, getMonthName(selectedMonth), selectedYear));
-                },
-                year, month, day);
+        if (!amountStr.isEmpty()) {
+            double amount = Double.parseDouble(amountStr);
 
-        datePickerDialog.show();
+            // Add new expense entry
+            String key = expenseRef.push().getKey();
+            if (key != null) {
+                expenseRef.child(key).setValue(amount)
+                        .addOnSuccessListener(aVoid -> {
+                            // Update total expense after successfully saving new entry
+                            updateTotalExpense(amount);
+                        })
+                        .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save expense.", Toast.LENGTH_SHORT).show());
+            }
+        } else {
+            Toast.makeText(getContext(), "Please enter an amount.", Toast.LENGTH_SHORT).show();
+        }
     }
 
-    private void showTimePicker() {
-        Calendar calendar = Calendar.getInstance();
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);  // Gets current hour (24-hour format)
-        int minute = calendar.get(Calendar.MINUTE);    // Gets current minute
+    private void updateTotalExpense(double newExpense) {
+        totalExpenseRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                double currentTotal = 0.0;
 
-        TimePickerDialog timePickerDialog = new TimePickerDialog(
-                getContext(),
-                (view, selectedHour, selectedMinute) -> {
-                    // Update the TextView with the selected time
-                    String amPm = selectedHour >= 12 ? "PM" : "AM";
-                    int hourIn12Format = selectedHour % 12 == 0 ? 12 : selectedHour % 12;
-                    timeText.setText(String.format("%02d:%02d %s", hourIn12Format, selectedMinute, amPm));
-                },
-                hour, minute, false);  // 'false' for 24-hour format, 'true' for 12-hour format
+                // If totalExpense exists, retrieve its value
+                if (dataSnapshot.exists()) {
+                    Double totalExpense = dataSnapshot.getValue(Double.class);
+                    if (totalExpense != null) {
+                        currentTotal = totalExpense;
+                    }
+                }
 
-        timePickerDialog.show();
+                // Calculate new total expense
+                double updatedTotalExpense = currentTotal + newExpense;
+
+                // Update total expense in Firebase
+                totalExpenseRef.setValue(updatedTotalExpense)
+                        .addOnSuccessListener(aVoid -> {
+                            Toast.makeText(getContext(), "Expense saved successfully!", Toast.LENGTH_SHORT).show();
+                            amountEditText.setText(""); // Clear input after saving
+                        })
+                        .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update total expense.", Toast.LENGTH_SHORT).show());
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Toast.makeText(getContext(), "Failed to load current total expense.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
-
-
-    private String getMonthName(int month) {
-        String[] months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-        return months[month];
-    }
-    private String getCurrentDate() {
-        Calendar calendar = Calendar.getInstance();
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
-
-        return dateFormat.format(calendar.getTime());
-    }
-
-    private String getCurrentTime() {
-        Calendar calendar = Calendar.getInstance();
-
-        SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
-
-        return timeFormat.format(calendar.getTime());
-    }
-
 }
