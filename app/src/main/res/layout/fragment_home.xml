@@ -156,7 +156,7 @@
             android:layout_height="wrap_content"
             android:background="@drawable/bg_gray_rounded"
             android:padding="8dp"
-            android:text="Balance: ₹1,198"
+            android:text="Balance: ₹0.00"
             android:textSize="17sp"
             android:gravity="center"
             android:layout_gravity="center"

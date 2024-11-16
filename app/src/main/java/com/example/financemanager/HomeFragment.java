@@ -45,38 +45,38 @@ public class HomeFragment extends Fragment {
     }
 
     private void fetchTotalIncome() {
-        incomeRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        incomeRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    totalIncome = 0;
+                totalIncome = 0; // Reset total income before summing
 
-                    // Iterate through all income entries and sum them
+                if (dataSnapshot.exists()) {
+                    // Iterate through all income entries
                     for (DataSnapshot incomeSnapshot : dataSnapshot.getChildren()) {
-                        Double income = incomeSnapshot.getValue(Double.class);
+                        Double income = incomeSnapshot.child("amount").getValue(Double.class);
                         if (income != null) {
-                            totalIncome += income;
+                            totalIncome += income; // Sum the amounts
                         }
                     }
-
-                    // Display the total income in the TextView
+                    // Update the income TextView
                     incomeTextView.setText("₹" + totalIncome);
-
-                    // Calculate and update the balance
-                    updateBalance();
                 } else {
+                    // Handle the case where no income data exists
                     incomeTextView.setText("₹0.00");
-                    updateBalance();
                 }
+
+                // Update the balance after fetching income
+                updateBalance();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-                // Handle potential errors here
+                // Handle errors during data retrieval
                 incomeTextView.setText("Failed to load income data");
             }
         });
     }
+
 
     private void fetchTotalExpense() {
         expenseRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -87,7 +87,7 @@ public class HomeFragment extends Fragment {
 
                     // Iterate through all expense entries and sum them
                     for (DataSnapshot expenseSnapshot : dataSnapshot.getChildren()) {
-                        Double expense = expenseSnapshot.getValue(Double.class);
+                        Double expense = expenseSnapshot.child("amount").getValue(Double.class);
                         if (expense != null) {
                             totalExpense += expense;
                         }
