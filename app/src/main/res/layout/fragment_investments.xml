@@ -9,15 +9,22 @@
 
     <!-- Black strip at the top with "Investment Details" -->
     <!-- Change the value of layout_height to increase/decrease thickness -->
-    <TextView
+    <androidx.appcompat.widget.Toolbar
         android:layout_width="match_parent"
-        android:layout_height="64dp"
+        android:layout_height="wrap_content"
         android:background="#121212"
-        android:gravity="center"
-        android:text="Investment Details"
-        android:textColor="#FFFFFF"
-        android:textSize="20sp"
-        android:layout_gravity="top" />
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        android:elevation="4dp">
+
+        <!-- Centered Title Text -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Investments"
+            android:textSize="20sp"
+            android:textColor="@android:color/white" />
+
+    </androidx.appcompat.widget.Toolbar>
 
     <!-- TODO: Update blank fragment layout -->
     <!-- Adjust layout_marginTop to avoid overlap with the top strip --> />
@@ -25,7 +32,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
-        android:text="OOps! Currently There Is No Investment"
+        android:text="Investment list is empty"
         android:textSize="30sp"
         android:layout_marginTop="50dp" />
 
