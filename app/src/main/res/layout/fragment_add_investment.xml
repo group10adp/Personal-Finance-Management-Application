@@ -1,0 +1,86 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".AddInvestment">
+
+    <!-- Black strip at the top with "Add Investment" -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="#000000"
+        android:gravity="center"
+        android:paddingTop="5dp"
+        android:text="Add Investment"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp" />
+
+    <!-- Layout for form elements -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:layout_marginTop="64dp">
+
+        <!-- Spinner for Mutual Fund selection -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mutual Fund"
+            android:textSize="16sp"
+            android:layout_marginTop="20dp"
+            android:layout_marginLeft="4dp" />
+
+        <Spinner
+            android:id="@+id/spinner_mutual_fund"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" />
+
+        <!-- Current Return Rate -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Current Return Rate"
+            android:textSize="16sp"
+            android:layout_marginTop="20dp"
+            android:layout_marginLeft="4dp" />
+
+        <EditText
+            android:id="@+id/edittext_return_rate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Current Return Rate (%)"
+            android:inputType="numberDecimal"
+            android:layout_marginTop="8dp" />
+
+        <!-- Amount -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Amount"
+            android:textSize="16sp"
+            android:layout_marginTop="20dp"
+            android:layout_marginLeft="4dp" />
+
+        <EditText
+            android:id="@+id/edittext_amount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter Amount"
+            android:inputType="number"
+            android:layout_marginTop="8dp" />
+
+        <!-- Submit Button -->
+        <Button
+            android:id="@+id/submit_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Submit"
+            android:textSize="18sp"
+            android:layout_marginTop="30dp"
+            android:backgroundTint="#121212"
+            android:textColor="@android:color/white" />
+    </LinearLayout>
+</FrameLayout>
