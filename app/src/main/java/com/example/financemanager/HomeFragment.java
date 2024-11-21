@@ -20,7 +20,7 @@ public class HomeFragment extends Fragment {
 
     private TextView incomeTextView, expenseTextView, balanceTextView;
     private FirebaseFirestore firestore;
-    private DocumentReference totalIncomeRef, totalExpenseRef, balanceRef;
+    private DocumentReference totalIncomeRef, totalExpenseRef;
 
     private double totalIncome = 0.0, totalExpense = 0.0;
 
