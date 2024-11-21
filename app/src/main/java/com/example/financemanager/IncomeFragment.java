@@ -16,14 +16,13 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FieldValue;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.Map;
 
 public class IncomeFragment extends Fragment {
 
@@ -32,7 +31,9 @@ public class IncomeFragment extends Fragment {
     private TextView dateText;
     private TextView timeText;
     private Spinner categorySpinner, paymentModeSpinner;
-    private DatabaseReference incomeRef, totalIncomeRef;
+    private FirebaseFirestore firestore;
+
+    private String userId = "user1"; // Placeholder, use actual user ID from authentication
 
     @Nullable
     @Override
@@ -61,7 +62,7 @@ public class IncomeFragment extends Fragment {
         // Set up ArrayAdapter for categorySpinner
         ArrayAdapter<CharSequence> categoryAdapter = ArrayAdapter.createFromResource(
                 requireContext(),
-                R.array.category_array,
+                R.array.category_array, // Use a different array for income categories
                 android.R.layout.simple_spinner_item
         );
         categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -76,9 +77,8 @@ public class IncomeFragment extends Fragment {
         paymentModeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         paymentModeSpinner.setAdapter(paymentModeAdapter);
 
-        // Initialize Firebase Database references
-        incomeRef = FirebaseDatabase.getInstance().getReference("user").child("user1").child("income");
-        totalIncomeRef = FirebaseDatabase.getInstance().getReference("user").child("user1").child("totalIncome");
+        // Initialize Firestore instance
+        firestore = FirebaseFirestore.getInstance();
 
         // Set click listener on save button
         saveButton.setOnClickListener(v -> saveIncome());
@@ -96,53 +96,66 @@ public class IncomeFragment extends Fragment {
         if (!amountStr.isEmpty()) {
             double amount = Double.parseDouble(amountStr);
 
+            // Get current year and month
+            String[] dateParts = date.split(" ");
+            String year = dateParts[2];
+            String month = String.format("%02d", Calendar.getInstance().get(Calendar.MONTH) + 1); // Get the current month in MM format
+
             // Create an IncomeEntry object
             IncomeEntry incomeEntry = new IncomeEntry(amount, date, time, category, paymentMode);
 
-            // Add new income entry
-            String key = incomeRef.push().getKey();
-            if (key != null) {
-                incomeRef.child(key).setValue(incomeEntry)
-                        .addOnSuccessListener(aVoid -> {
-                            // Update total income after successfully saving new entry
-                            updateTotalIncome(amount);
-                        })
-                        .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save income entry.", Toast.LENGTH_SHORT).show());
-            }
+            // Save income entry to Firestore
+            firestore.collection("users").document(userId)
+                    .collection("income")
+                    .document(year)
+                    .collection(month)
+                    .add(incomeEntry)
+                    .addOnSuccessListener(documentReference -> {
+                        // Update total income for the user
+                        updateTotalIncome(year, month, amount);
+                    })
+                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save income entry.", Toast.LENGTH_SHORT).show());
         } else {
             Toast.makeText(getContext(), "Please enter an amount.", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void updateTotalIncome(double newIncome) {
-        totalIncomeRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                double currentTotal = 0.0;
+    private void updateTotalIncome(String year, String month, double newIncome) {
+        DocumentReference totalIncomeDoc = firestore.collection("users").document(userId)
+                .collection("income").document(year).collection(month).document("totalIncome");
 
-                if (dataSnapshot.exists()) {
-                    Double totalIncome = dataSnapshot.getValue(Double.class);
-                    if (totalIncome != null) {
-                        currentTotal = totalIncome;
-                    }
-                }
+        // Get the current total income for the month
+        totalIncomeDoc.get().addOnSuccessListener(documentSnapshot -> {
+            double currentTotal = documentSnapshot.exists() ? documentSnapshot.getDouble("total") : 0.0;
+            double updatedTotal = currentTotal + newIncome;
 
-                double updatedTotalIncome = currentTotal + newIncome;
-
-                totalIncomeRef.setValue(updatedTotalIncome)
-                        .addOnSuccessListener(aVoid -> {
-                            Toast.makeText(getContext(), "Income saved successfully!", Toast.LENGTH_SHORT).show();
-                            amountEditText.setText("");
-                        })
-                        .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update total income.", Toast.LENGTH_SHORT).show());
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                Toast.makeText(getContext(), "Failed to load current total income.", Toast.LENGTH_SHORT).show();
-            }
-        });
+            // Update the total income for that month
+            totalIncomeDoc.set(Map.of("total", updatedTotal))
+                    .addOnSuccessListener(aVoid -> {
+                        // Update yearly total income
+                        updateYearlyIncome(year, newIncome);
+                        Toast.makeText(getContext(), "Income saved successfully!", Toast.LENGTH_SHORT).show();
+                        amountEditText.setText("");
+                    })
+                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update monthly total income.", Toast.LENGTH_SHORT).show());
+        }).addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to load current monthly income.", Toast.LENGTH_SHORT).show());
     }
+
+    private void updateYearlyIncome(String year, double newIncome) {
+        DocumentReference yearlyIncomeDoc = firestore.collection("users").document(userId)
+                .collection("income").document("totalYearlyIncome"); // No need to use the year here
+
+        // Check if the totalYearlyIncome document exists
+        yearlyIncomeDoc.get().addOnSuccessListener(documentSnapshot -> {
+            double currentYearlyTotal = documentSnapshot.exists() ? documentSnapshot.getDouble("total") : 0.0;
+            double updatedYearlyTotal = currentYearlyTotal + newIncome;
+
+            // Set or update the total yearly income in the document
+            yearlyIncomeDoc.set(Map.of("total", updatedYearlyTotal))
+                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update yearly income.", Toast.LENGTH_SHORT).show());
+        }).addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to load current yearly income.", Toast.LENGTH_SHORT).show());
+    }
+
 
     private String getCurrentDate() {
         Calendar calendar = Calendar.getInstance();

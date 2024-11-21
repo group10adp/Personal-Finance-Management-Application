@@ -16,14 +16,13 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FieldValue;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.Map;
 
 public class ExpenseFragment extends Fragment {
 
@@ -32,7 +31,9 @@ public class ExpenseFragment extends Fragment {
     private TextView dateText;
     private TextView timeText;
     private Spinner categorySpinner, paymentModeSpinner;
-    private DatabaseReference expenseRef, totalExpenseRef;
+    private FirebaseFirestore firestore;
+
+    private String userId = "user1"; // Placeholder, use actual user ID from authentication
 
     @Nullable
     @Override
@@ -61,7 +62,7 @@ public class ExpenseFragment extends Fragment {
         // Set up ArrayAdapter for categorySpinner
         ArrayAdapter<CharSequence> categoryAdapter = ArrayAdapter.createFromResource(
                 requireContext(),
-                R.array.category_array,
+                R.array.category_array, // Use a different array for expense categories
                 android.R.layout.simple_spinner_item
         );
         categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -76,9 +77,8 @@ public class ExpenseFragment extends Fragment {
         paymentModeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         paymentModeSpinner.setAdapter(paymentModeAdapter);
 
-        // Initialize Firebase Database references
-        expenseRef = FirebaseDatabase.getInstance().getReference("user").child("user1").child("expense");
-        totalExpenseRef = FirebaseDatabase.getInstance().getReference("user").child("user1").child("totalExpense");
+        // Initialize Firestore instance
+        firestore = FirebaseFirestore.getInstance();
 
         // Set click listener on save button
         saveButton.setOnClickListener(v -> saveExpense());
@@ -96,52 +96,64 @@ public class ExpenseFragment extends Fragment {
         if (!amountStr.isEmpty()) {
             double amount = Double.parseDouble(amountStr);
 
+            // Get current year and month
+            String[] dateParts = date.split(" ");
+            String year = dateParts[2];
+            String month = String.format("%02d", Calendar.getInstance().get(Calendar.MONTH) + 1); // Get the current month in MM format
+
             // Create an ExpenseEntry object
             ExpenseEntry expenseEntry = new ExpenseEntry(amount, date, time, category, paymentMode);
 
-            // Add new expense entry
-            String key = expenseRef.push().getKey();
-            if (key != null) {
-                expenseRef.child(key).setValue(expenseEntry)
-                        .addOnSuccessListener(aVoid -> {
-                            // Update total expense after successfully saving new entry
-                            updateTotalExpense(amount);
-                        })
-                        .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save expense entry.", Toast.LENGTH_SHORT).show());
-            }
+            // Save expense entry to Firestore
+            firestore.collection("users").document(userId)
+                    .collection("expense")
+                    .document(year)
+                    .collection(month)
+                    .add(expenseEntry)
+                    .addOnSuccessListener(documentReference -> {
+                        // Update total expense for the user
+                        updateTotalExpense(year, month, amount);
+                    })
+                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save expense entry.", Toast.LENGTH_SHORT).show());
         } else {
             Toast.makeText(getContext(), "Please enter an amount.", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void updateTotalExpense(double newExpense) {
-        totalExpenseRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                double currentTotal = 0.0;
+    private void updateTotalExpense(String year, String month, double newExpense) {
+        DocumentReference totalExpenseDoc = firestore.collection("users").document(userId)
+                .collection("expense").document(year).collection(month).document("totalExpense");
 
-                if (dataSnapshot.exists()) {
-                    Double totalExpense = dataSnapshot.getValue(Double.class);
-                    if (totalExpense != null) {
-                        currentTotal = totalExpense;
-                    }
-                }
+        // Get the current total expense for the month
+        totalExpenseDoc.get().addOnSuccessListener(documentSnapshot -> {
+            double currentTotal = documentSnapshot.exists() ? documentSnapshot.getDouble("total") : 0.0;
+            double updatedTotal = currentTotal + newExpense;
 
-                double updatedTotalExpense = currentTotal + newExpense;
+            // Update the total expense for that month
+            totalExpenseDoc.set(Map.of("total", updatedTotal))
+                    .addOnSuccessListener(aVoid -> {
+                        // Update yearly total expense
+                        updateYearlyExpense(year, newExpense);
+                        Toast.makeText(getContext(), "Expense saved successfully!", Toast.LENGTH_SHORT).show();
+                        amountEditText.setText("");
+                    })
+                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update monthly total expense.", Toast.LENGTH_SHORT).show());
+        }).addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to load current monthly expense.", Toast.LENGTH_SHORT).show());
+    }
 
-                totalExpenseRef.setValue(updatedTotalExpense)
-                        .addOnSuccessListener(aVoid -> {
-                            Toast.makeText(getContext(), "Expense saved successfully!", Toast.LENGTH_SHORT).show();
-                            amountEditText.setText("");
-                        })
-                        .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update total expense.", Toast.LENGTH_SHORT).show());
-            }
+    private void updateYearlyExpense(String year, double newExpense) {
+        DocumentReference yearlyExpenseDoc = firestore.collection("users").document(userId)
+                .collection("expense").document("totalYearlyExpense"); // No need to use the year here
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                Toast.makeText(getContext(), "Failed to load current total expense.", Toast.LENGTH_SHORT).show();
-            }
-        });
+        // Check if the totalYearlyExpense document exists
+        yearlyExpenseDoc.get().addOnSuccessListener(documentSnapshot -> {
+            double currentYearlyTotal = documentSnapshot.exists() ? documentSnapshot.getDouble("total") : 0.0;
+            double updatedYearlyTotal = currentYearlyTotal + newExpense;
+
+            // Set or update the total yearly expense in the document
+            yearlyExpenseDoc.set(Map.of("total", updatedYearlyTotal))
+                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update yearly expense.", Toast.LENGTH_SHORT).show());
+        }).addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to load current yearly expense.", Toast.LENGTH_SHORT).show());
     }
 
     private String getCurrentDate() {

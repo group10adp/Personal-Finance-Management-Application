@@ -9,16 +9,18 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.ListenerRegistration;
+
+import java.util.Calendar;
 
 public class HomeFragment extends Fragment {
 
     private TextView incomeTextView, expenseTextView, balanceTextView;
-    private DatabaseReference incomeRef, expenseRef, balanceRef;
+    private FirebaseFirestore firestore;
+    private DocumentReference totalIncomeRef, totalExpenseRef, balanceRef;
 
     private double totalIncome = 0.0, totalExpense = 0.0;
 
@@ -32,12 +34,26 @@ public class HomeFragment extends Fragment {
         expenseTextView = view.findViewById(R.id.expenseTextView);
         balanceTextView = view.findViewById(R.id.balanceTextView); // New TextView for balance
 
-        // Initialize Firebase Database references
-        incomeRef = FirebaseDatabase.getInstance().getReference("user").child("user1").child("income");
-        expenseRef = FirebaseDatabase.getInstance().getReference("user").child("user1").child("expense");
-        balanceRef = FirebaseDatabase.getInstance().getReference("user").child("user1").child("balance");
+        // Initialize Firebase Firestore instance
+        firestore = FirebaseFirestore.getInstance();
+        int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+        int currentMonth = Calendar.getInstance().get(Calendar.MONTH) + 1;
 
-        // Retrieve the total income and total expense from Firebase
+        // Firebase references for total income, total expense, and balance
+        totalIncomeRef = firestore.collection("users").document("user1")
+                .collection("income")
+                .document(String.valueOf(currentYear))
+                .collection(String.valueOf(currentMonth))
+                .document("totalIncome");
+
+        totalExpenseRef = firestore.collection("users").document("user1")
+                .collection("expense")
+                .document(String.valueOf(currentYear))
+                .collection(String.valueOf(currentMonth))
+                .document("totalExpense");
+
+
+        // Retrieve the total income and total expense from Firestore
         fetchTotalIncome();
         fetchTotalExpense();
 
@@ -45,68 +61,38 @@ public class HomeFragment extends Fragment {
     }
 
     private void fetchTotalIncome() {
-        incomeRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                totalIncome = 0; // Reset total income before summing
-
-                if (dataSnapshot.exists()) {
-                    // Iterate through all income entries
-                    for (DataSnapshot incomeSnapshot : dataSnapshot.getChildren()) {
-                        Double income = incomeSnapshot.child("amount").getValue(Double.class);
-                        if (income != null) {
-                            totalIncome += income; // Sum the amounts
-                        }
-                    }
-                    // Update the income TextView
+        totalIncomeRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                DocumentSnapshot documentSnapshot = task.getResult();
+                if (documentSnapshot != null && documentSnapshot.exists()) {
+                    totalIncome = documentSnapshot.getDouble("total").doubleValue(); // Assuming the field is named "total"
                     incomeTextView.setText("₹" + totalIncome);
                 } else {
-                    // Handle the case where no income data exists
                     incomeTextView.setText("₹0.00");
                 }
 
                 // Update the balance after fetching income
                 updateBalance();
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                // Handle errors during data retrieval
+            } else {
                 incomeTextView.setText("Failed to load income data");
             }
         });
     }
 
-
     private void fetchTotalExpense() {
-        expenseRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    totalExpense = 0;
-
-                    // Iterate through all expense entries and sum them
-                    for (DataSnapshot expenseSnapshot : dataSnapshot.getChildren()) {
-                        Double expense = expenseSnapshot.child("amount").getValue(Double.class);
-                        if (expense != null) {
-                            totalExpense += expense;
-                        }
-                    }
-
-                    // Display the total expense in the TextView
+        totalExpenseRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                DocumentSnapshot documentSnapshot = task.getResult();
+                if (documentSnapshot != null && documentSnapshot.exists()) {
+                    totalExpense = documentSnapshot.getDouble("total").doubleValue(); // Assuming the field is named "total"
                     expenseTextView.setText("₹" + totalExpense);
-
-                    // Calculate and update the balance
-                    updateBalance();
                 } else {
                     expenseTextView.setText("₹0.00");
-                    updateBalance();
                 }
-            }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                // Handle potential errors here
+                // Calculate and update the balance
+                updateBalance();
+            } else {
                 expenseTextView.setText("Failed to load expense data");
             }
         });
@@ -119,10 +105,5 @@ public class HomeFragment extends Fragment {
         balanceTextView.setText("Balance: ₹" + balance);
 
         // Store the balance in Firebase
-        balanceRef.setValue(balance).addOnSuccessListener(aVoid -> {
-            // Optionally show a success message
-        }).addOnFailureListener(e -> {
-            // Optionally show an error message
-        });
     }
 }
