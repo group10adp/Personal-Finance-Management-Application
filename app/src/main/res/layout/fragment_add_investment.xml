@@ -12,17 +12,16 @@
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         android:elevation="4dp">
 
-        <!-- Centered Title Text -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Investments"
+            android:text="Add Investment"
             android:textSize="20sp"
             android:textColor="@android:color/white" />
 
     </androidx.appcompat.widget.Toolbar>
 
-    <!-- Layout for form elements -->
+    <!-- Form elements -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -30,7 +29,6 @@
         android:padding="16dp"
         android:layout_marginTop="64dp">
 
-        <!-- Spinner for Mutual Fund selection -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -45,7 +43,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp" />
 
-        <!-- Current Return Rate -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -62,7 +59,6 @@
             android:inputType="numberDecimal"
             android:layout_marginTop="8dp" />
 
-        <!-- Amount -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -79,7 +75,6 @@
             android:inputType="number"
             android:layout_marginTop="8dp" />
 
-        <!-- Submit Button -->
         <Button
             android:id="@+id/submit_button"
             android:layout_width="match_parent"
@@ -88,6 +83,7 @@
             android:textSize="18sp"
             android:layout_marginTop="30dp"
             android:backgroundTint="#121212"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:enabled="false" />
     </LinearLayout>
 </FrameLayout>
