@@ -16,6 +16,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FieldValue;
@@ -33,12 +35,17 @@ public class ExpenseFragment extends Fragment {
     private Spinner categorySpinner, paymentModeSpinner;
     private FirebaseFirestore firestore;
 
-    private String userId = "user1"; // Placeholder, use actual user ID from authentication
+    FirebaseAuth auth;
+
+    private String userId;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_expense, container, false);
+
+        auth = FirebaseAuth.getInstance();
+        userId = String.valueOf(auth.getCurrentUser().getUid());
 
         // Initialize views
         amountEditText = view.findViewById(R.id.amountEditText);

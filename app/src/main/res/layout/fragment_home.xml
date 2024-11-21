@@ -41,6 +41,7 @@
             </LinearLayout>
             <!-- Profile Icon -->
             <ImageView
+                android:id="@+id/profile"
                 android:layout_width="46dp"
                 android:layout_height="46dp"
                 android:layout_gravity="end"
