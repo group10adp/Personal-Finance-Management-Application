@@ -4,22 +4,30 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.data.PieData;
+import com.github.mikephil.charting.data.PieDataSet;
+import com.github.mikephil.charting.data.PieEntry;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.ListenerRegistration;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 
 public class HomeFragment extends Fragment {
@@ -31,10 +39,12 @@ public class HomeFragment extends Fragment {
     private ImageView profile;
 
     private double totalIncome = 0.0, totalExpense = 0.0;
+    private double balance;
 
     FirebaseAuth auth;
 
     private String userId;
+    PieChart pieChart;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -43,6 +53,11 @@ public class HomeFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
         getActivity().getWindow().setStatusBarColor(Color.TRANSPARENT);
+
+        pieChart = view.findViewById(R.id.pieChart);
+
+        // Sample data without labels
+
 
         auth = FirebaseAuth.getInstance();
         userId = String.valueOf(auth.getCurrentUser().getUid());
@@ -77,8 +92,52 @@ public class HomeFragment extends Fragment {
 
 
         // Retrieve the total income and total expense from Firestore
-        fetchTotalIncome();
-        fetchTotalExpense();
+        fetchTotalExpenseIncome();
+
+        ArrayList<PieEntry> pieEntries = new ArrayList<>();
+        pieEntries.add(new PieEntry((float)50));
+        pieEntries.add(new PieEntry((float)50));
+
+        // Customize dataset
+        PieDataSet dataSet = new PieDataSet(pieEntries, "");
+        dataSet.setColors(
+                Color.parseColor("#43A047"),  // Green shade
+                Color.parseColor("#E53935") // Red shade
+        ); // Custom colors
+        dataSet.setValueTextColor(Color.WHITE);
+        dataSet.setValueTextSize(12f);
+
+        // Create PieData and set it to the chart
+        PieData pieData = new PieData(dataSet);
+        pieChart.setData(pieData);
+
+        // Remove labels from the chart
+        pieChart.setDrawEntryLabels(false);
+
+        // Customize the chart
+        pieChart.setUsePercentValues(true);
+        pieChart.getDescription().setEnabled(false); // Hide the description
+        pieChart.setEntryLabelTextSize(12f);
+        pieChart.getLegend().setEnabled(false); // Hide the legend
+
+        // Refresh the chart
+        pieChart.invalidate();
+
+        // Dynamically create a legend on the right
+        LinearLayout legendContainer = view.findViewById(R.id.legend_container); // Add this in your layout XML
+        String[] labels = {"Income","Spending"};
+        int[] colors = {Color.parseColor("#43A047"),Color.parseColor("#E53935")};
+
+        for (int i = 0; i < labels.length; i++) {
+            View legendItem = inflater.inflate(R.layout.legend_item, legendContainer, false); // Create a custom layout for legend
+            TextView label = legendItem.findViewById(R.id.legend_label);
+            View colorIndicator = legendItem.findViewById(R.id.legend_color);
+
+            label.setText(labels[i]);
+            colorIndicator.setBackgroundColor(colors[i]);
+
+            legendContainer.addView(legendItem);
+        }
 
         profile.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -93,7 +152,7 @@ public class HomeFragment extends Fragment {
         return view;
     }
 
-    private void fetchTotalIncome() {
+    private void fetchTotalExpenseIncome() {
         totalIncomeRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 DocumentSnapshot documentSnapshot = task.getResult();
@@ -103,16 +162,13 @@ public class HomeFragment extends Fragment {
                 } else {
                     incomeTextView.setText("₹0.00");
                 }
-
-                // Update the balance after fetching income
-                updateBalance();
             } else {
                 incomeTextView.setText("Failed to load income data");
             }
+            updateBalance();
+            updatePieChart(pieChart); // Update pie chart after income is fetched
         });
-    }
 
-    private void fetchTotalExpense() {
         totalExpenseRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 DocumentSnapshot documentSnapshot = task.getResult();
@@ -122,23 +178,30 @@ public class HomeFragment extends Fragment {
                 } else {
                     expenseTextView.setText("₹0.00");
                 }
-
-                // Calculate and update the balance
-                updateBalance();
             } else {
                 expenseTextView.setText("Failed to load expense data");
             }
+            updateBalance();
+            updatePieChart(pieChart); // Update pie chart after expense is fetched
         });
     }
 
-    private void updateBalance() {
-        double balance = totalIncome - totalExpense;
+
+
+    private double updateBalance() {
+        balance = totalIncome - totalExpense;
 
 // Format the balance to 2 decimal places
         String formattedBalance = String.format("Balance: ₹%.2f", balance);
 
 // Update the balance in the TextView
         balanceTextView.setText(formattedBalance);
+        return balance;
+    }
+
+
+    private void pieChart(){
+
     }
 
     public static String getTimeOfDay() {
@@ -155,4 +218,46 @@ public class HomeFragment extends Fragment {
             return "Evening";
         }
     }
+
+    private void updatePieChart(PieChart pieChart) {
+        if (balance == 0) {
+            // Avoid division by zero
+            Toast.makeText(getActivity(), "No data available to display in the chart", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        float incomePercentage = (float) (totalIncome / balance * 100);
+        float expensePercentage = (float) (totalExpense / balance * 100);
+
+
+        ArrayList<PieEntry> pieEntries = new ArrayList<>();
+        pieEntries.add(new PieEntry(incomePercentage, "Income"));
+        pieEntries.add(new PieEntry(expensePercentage, "Spending"));
+
+        // Customize dataset
+        PieDataSet dataSet = new PieDataSet(pieEntries, "");
+        dataSet.setColors(
+                Color.parseColor("#43A047"),  // Green shade
+                Color.parseColor("#E53935") // Red shade
+        ); // Custom colors
+        dataSet.setValueTextColor(Color.WHITE);
+        dataSet.setValueTextSize(12f);
+
+        // Create PieData and set it to the chart
+        PieData pieData = new PieData(dataSet);
+        pieChart.setData(pieData);
+
+        // Remove labels from the chart
+        pieChart.setDrawEntryLabels(false);
+
+        // Customize the chart
+        pieChart.setUsePercentValues(true);
+        pieChart.getDescription().setEnabled(false); // Hide the description
+        pieChart.setEntryLabelTextSize(12f);
+        pieChart.getLegend().setEnabled(false); // Hide the legend
+
+        // Refresh the chart
+        pieChart.invalidate();
+    }
+
 }
