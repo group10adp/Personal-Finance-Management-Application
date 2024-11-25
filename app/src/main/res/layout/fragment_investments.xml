@@ -39,7 +39,7 @@
         android:layout_gravity="end|center_vertical"
         android:layout_marginEnd="16dp"
         android:layout_marginRight="16dp"
-        android:layout_marginTop="200dp"
+        android:layout_marginTop="250dp"
         android:backgroundTint="#E8DBFD"
         android:contentDescription="Add investment"
         app:srcCompat="@android:drawable/ic_input_add" />
