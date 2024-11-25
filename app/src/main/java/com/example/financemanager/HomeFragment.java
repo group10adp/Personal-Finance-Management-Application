@@ -2,6 +2,7 @@ package com.example.financemanager;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,7 +24,7 @@ import java.util.Calendar;
 
 public class HomeFragment extends Fragment {
 
-    private TextView incomeTextView, expenseTextView, balanceTextView;
+    private TextView incomeTextView, expenseTextView, balanceTextView, time_of_day;
     private FirebaseFirestore firestore;
     private DocumentReference totalIncomeRef, totalExpenseRef;
 
@@ -41,6 +42,8 @@ public class HomeFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
+        getActivity().getWindow().setStatusBarColor(Color.TRANSPARENT);
+
         auth = FirebaseAuth.getInstance();
         userId = String.valueOf(auth.getCurrentUser().getUid());
 
@@ -48,6 +51,9 @@ public class HomeFragment extends Fragment {
         incomeTextView = view.findViewById(R.id.incomeTextView);
         expenseTextView = view.findViewById(R.id.expenseTextView);
         balanceTextView = view.findViewById(R.id.balanceTextView); // New TextView for balance
+        time_of_day=view.findViewById(R.id.time_of_day);
+
+        time_of_day.setText("Good "+getTimeOfDay());
 
         profile=view.findViewById(R.id.profile);
 
@@ -128,9 +134,25 @@ public class HomeFragment extends Fragment {
     private void updateBalance() {
         double balance = totalIncome - totalExpense;
 
-        // Update the balance in the TextView
-        balanceTextView.setText("Balance: ₹" + balance);
+// Format the balance to 2 decimal places
+        String formattedBalance = String.format("Balance: ₹%.2f", balance);
 
-        // Store the balance in Firebase
+// Update the balance in the TextView
+        balanceTextView.setText(formattedBalance);
+    }
+
+    public static String getTimeOfDay() {
+        // Get the current time
+        Calendar calendar = Calendar.getInstance();
+        int hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
+
+        // Determine the time of day
+        if (hourOfDay >= 5 && hourOfDay < 12) {
+            return "Morning";
+        } else if (hourOfDay >= 12 && hourOfDay < 17) {
+            return "Afternoon";
+        } else {
+            return "Evening";
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.financemanager;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,6 +27,8 @@ public class InvestmentsFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_investments, container, false);
+
+        getActivity().getWindow().setStatusBarColor(Color.parseColor("#121212"));
 
         // Initialize RecyclerView
         recyclerView = view.findViewById(R.id.recycler_view_investments);

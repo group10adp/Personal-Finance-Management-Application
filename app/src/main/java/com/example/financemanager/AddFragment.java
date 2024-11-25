@@ -1,5 +1,6 @@
 package com.example.financemanager;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,6 +21,8 @@ public class AddFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_add, container, false);
+
+        getActivity().getWindow().setStatusBarColor(Color.parseColor("#121212"));
 
         // Initialize TabLayout and ViewPager2
         TabLayout tabLayout = view.findViewById(R.id.tabLayout);

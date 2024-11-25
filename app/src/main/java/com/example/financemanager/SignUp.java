@@ -24,6 +24,8 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class SignUp extends AppCompatActivity {
 
@@ -31,8 +33,11 @@ public class SignUp extends AppCompatActivity {
     Button btnSignup;
     FirebaseAuth mAuth;
     ProgressBar progressBar;
-    TextView textView;
+    TextView textView,name;
     String password;
+
+    private DatabaseReference database;
+    private FirebaseAuth auth;
 
     @Override
     public void onStart() {
@@ -58,7 +63,12 @@ public class SignUp extends AppCompatActivity {
         btnSignup = findViewById(R.id.signup_btn);
         progressBar = findViewById(R.id.progressBar);
 
+        name=findViewById(R.id.name);
         textView = findViewById(R.id.loginNow);
+
+        auth = FirebaseAuth.getInstance();
+        database = FirebaseDatabase.getInstance().getReference();
+
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -143,5 +153,27 @@ public class SignUp extends AppCompatActivity {
             }
         });
 
+    }
+
+    private void pushNameToFirebase(String name) {
+        // Get the current user's ID (userId)
+        String userId = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : null;
+
+        if (userId != null) {
+
+            DatabaseReference userRef = database.child("Enduser").child(userId).child("name");
+
+            // Push the name to Firebase
+            userRef.setValue(name).addOnSuccessListener(aVoid -> {
+                // Successfully added the name
+                Toast.makeText(SignUp.this, "Name saved successfully!", Toast.LENGTH_SHORT).show();
+            }).addOnFailureListener(e -> {
+                // Failed to add the name
+                Toast.makeText(SignUp.this, "Failed to save name: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            });
+        } else {
+            // No authenticated user
+            Toast.makeText(SignUp.this, "User is not logged in!", Toast.LENGTH_SHORT).show();
+        }
     }
 }
