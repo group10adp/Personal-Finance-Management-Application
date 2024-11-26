@@ -30,7 +30,7 @@ import java.util.Map;
 
 public class IncomeFragment extends Fragment {
 
-    private EditText amountEditText;
+    private EditText amountEditText,note1;
     private Button saveButton;
     private TextView dateText;
     private TextView timeText;
@@ -50,6 +50,7 @@ public class IncomeFragment extends Fragment {
         userId = String.valueOf(auth.getCurrentUser().getUid());
 
         // Initialize views
+        note1=view.findViewById(R.id.notes);
         amountEditText = view.findViewById(R.id.amountEditText);
         saveButton = view.findViewById(R.id.saveButton);
         dateText = view.findViewById(R.id.dateText);
@@ -99,6 +100,7 @@ public class IncomeFragment extends Fragment {
         String amountStr = amountEditText.getText().toString().trim();
         String date = dateText.getText().toString().trim();
         String time = timeText.getText().toString().trim();
+        String note=note1.getText().toString().trim();
         String category = categorySpinner.getSelectedItem().toString();
         String paymentMode = paymentModeSpinner.getSelectedItem().toString();
 
@@ -111,7 +113,7 @@ public class IncomeFragment extends Fragment {
             String month = String.format("%02d", Calendar.getInstance().get(Calendar.MONTH) + 1); // Get the current month in MM format
 
             // Create an IncomeEntry object
-            IncomeEntry incomeEntry = new IncomeEntry(amount, date, time, category, paymentMode);
+            IncomeEntry incomeEntry = new IncomeEntry(amount, date, time, category, paymentMode,note);
 
             // Save income entry to Firestore
             firestore.collection("users").document(userId)
@@ -145,6 +147,7 @@ public class IncomeFragment extends Fragment {
                         updateYearlyIncome(year, newIncome);
                         Toast.makeText(getContext(), "Income saved successfully!", Toast.LENGTH_SHORT).show();
                         amountEditText.setText("");
+                        note1.setText("");
                     })
                     .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update monthly total income.", Toast.LENGTH_SHORT).show());
         }).addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to load current monthly income.", Toast.LENGTH_SHORT).show());
@@ -221,16 +224,18 @@ public class IncomeFragment extends Fragment {
         private String time;
         private String category;
         private String paymentMode;
+        private String note;
 
         public IncomeEntry() {
         }
 
-        public IncomeEntry(double amount, String date, String time, String category, String paymentMode) {
+        public IncomeEntry(double amount, String date, String time, String category, String paymentMode,String note) {
             this.amount = amount;
             this.date = date;
             this.time = time;
             this.category = category;
             this.paymentMode = paymentMode;
+            this.note=note;
         }
 
         public double getAmount() {
@@ -239,6 +244,10 @@ public class IncomeFragment extends Fragment {
 
         public String getDate() {
             return date;
+        }
+
+        public String getNote() {
+            return note;
         }
 
         public String getTime() {

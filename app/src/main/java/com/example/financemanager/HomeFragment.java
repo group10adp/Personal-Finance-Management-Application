@@ -16,11 +16,18 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.BarData;
+import com.github.mikephil.charting.data.BarDataSet;
+import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
+import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -45,6 +52,7 @@ public class HomeFragment extends Fragment {
 
     private String userId;
     PieChart pieChart;
+    BarChart barChart;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -55,7 +63,7 @@ public class HomeFragment extends Fragment {
         getActivity().getWindow().setStatusBarColor(Color.TRANSPARENT);
 
         pieChart = view.findViewById(R.id.pieChart);
-
+        barChart = view.findViewById(R.id.barChart);
         // Sample data without labels
 
 
@@ -123,6 +131,52 @@ public class HomeFragment extends Fragment {
         // Refresh the chart
         pieChart.invalidate();
 
+        ArrayList<BarEntry> entries = new ArrayList<>();
+        entries.add(new BarEntry(0, (float) 50));
+        entries.add(new BarEntry(1, (float) 50));
+
+        // Bar chart dataset
+        BarDataSet barDataSet = new BarDataSet(entries, "Income vs Spending");
+        barDataSet.setColors(
+                Color.parseColor("#43A047"), // Green shade
+                Color.parseColor("#E53935")  // Red shade
+        ); // Custom colors
+        barDataSet.setValueTextColor(Color.WHITE);
+        barDataSet.setValueTextSize(12f);
+
+        BarData barData = new BarData(barDataSet);
+        barData.setBarWidth(0.4f); // Bar width
+
+        // Configure the BarChart
+        barChart.setData(barData);
+        barChart.setFitBars(true);
+        barChart.getDescription().setEnabled(false); // Hide description
+        barChart.getLegend().setEnabled(false); // Hide legend
+        barChart.setTouchEnabled(false); // Disable interaction
+
+        // Customize X-axis
+        XAxis xAxis = barChart.getXAxis();
+        xAxis.setGranularity(1f);
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setDrawGridLines(false); // Hide vertical grid lines
+        xAxis.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                return value == 0 ? "Income" : "Spending";
+            }
+        });
+
+        // Customize Y-axis
+        YAxis leftAxis = barChart.getAxisLeft();
+        leftAxis.setAxisMinimum(0f); // Start at 0
+        leftAxis.setDrawGridLines(false); // Hide horizontal grid lines
+
+        YAxis rightAxis = barChart.getAxisRight();
+        rightAxis.setEnabled(false); // Hide right axis
+
+        // Refresh the chart
+        barChart.invalidate();
+
         // Dynamically create a legend on the right
         LinearLayout legendContainer = view.findViewById(R.id.legend_container); // Add this in your layout XML
         String[] labels = {"Income","Spending"};
@@ -167,6 +221,7 @@ public class HomeFragment extends Fragment {
             }
             updateBalance();
             updatePieChart(pieChart); // Update pie chart after income is fetched
+            updateBarChart((BarChart) getView().findViewById(R.id.barChart));
         });
 
         totalExpenseRef.get().addOnCompleteListener(task -> {
@@ -183,6 +238,7 @@ public class HomeFragment extends Fragment {
             }
             updateBalance();
             updatePieChart(pieChart); // Update pie chart after expense is fetched
+            updateBarChart((BarChart) getView().findViewById(R.id.barChart));
         });
     }
 
@@ -222,7 +278,7 @@ public class HomeFragment extends Fragment {
     private void updatePieChart(PieChart pieChart) {
         if (balance == 0) {
             // Avoid division by zero
-            Toast.makeText(getActivity(), "No data available to display in the chart", Toast.LENGTH_SHORT).show();
+
             return;
         }
 
@@ -258,6 +314,60 @@ public class HomeFragment extends Fragment {
 
         // Refresh the chart
         pieChart.invalidate();
+    }
+
+    private void updateBarChart(BarChart barChart) {
+        if (totalIncome == 0 && totalExpense == 0) {
+            // Avoid rendering an empty chart
+
+            return;
+        }
+
+        ArrayList<BarEntry> entries = new ArrayList<>();
+        entries.add(new BarEntry(0, (float) totalIncome, "Income"));
+        entries.add(new BarEntry(1, (float) totalExpense, "Spending"));
+
+        // Bar chart dataset
+        BarDataSet barDataSet = new BarDataSet(entries, "Income vs Spending");
+        barDataSet.setColors(
+                Color.parseColor("#43A047"), // Green shade
+                Color.parseColor("#E53935")  // Red shade
+        ); // Custom colors
+        barDataSet.setValueTextColor(Color.WHITE);
+        barDataSet.setValueTextSize(12f);
+
+        BarData barData = new BarData(barDataSet);
+        barData.setBarWidth(0.4f); // Bar width
+
+        // Configure the BarChart
+        barChart.setData(barData);
+        barChart.setFitBars(true);
+        barChart.getDescription().setEnabled(false); // Hide description
+        barChart.getLegend().setEnabled(false); // Hide legend
+        barChart.setTouchEnabled(false); // Disable interaction
+
+        // Customize X-axis
+        XAxis xAxis = barChart.getXAxis();
+        xAxis.setGranularity(1f);
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setDrawGridLines(false); // Hide vertical grid lines
+        xAxis.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                return value == 0 ? "Income" : "Spending";
+            }
+        });
+
+        // Customize Y-axis
+        YAxis leftAxis = barChart.getAxisLeft();
+        leftAxis.setAxisMinimum(0f); // Start at 0
+        leftAxis.setDrawGridLines(false); // Hide horizontal grid lines
+
+        YAxis rightAxis = barChart.getAxisRight();
+        rightAxis.setEnabled(false); // Hide right axis
+
+        // Refresh the chart
+        barChart.invalidate();
     }
 
 }

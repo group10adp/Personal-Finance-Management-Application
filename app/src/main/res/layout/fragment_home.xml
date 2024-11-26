@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:scrollbars="none"
+    android:scrollbarStyle="insideInset"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:padding="16dp">
 
@@ -167,6 +169,7 @@
 
         <!-- Recent Transactions Section -->
 
+
         <!-- Card for PieChart with Category Info -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
@@ -206,6 +209,28 @@
                     android:orientation="vertical" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="130dp"
+            android:layout_marginHorizontal="8dp"
+            android:elevation="4dp"
+            android:padding="12dp"
+            android:layout_gravity="center"
+            app:cardCornerRadius="16dp">
+
+            <com.github.mikephil.charting.charts.BarChart
+                android:id="@+id/barChart"
+                android:layout_width="match_parent"
+                android:layout_height="190dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_gravity="center" />
+        </androidx.cardview.widget.CardView>
+
+
+
         <!-- Your Budgets Section -->
 
     </LinearLayout>
