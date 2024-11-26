@@ -1,5 +1,7 @@
 package com.example.financemanager;
 
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -9,20 +11,38 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Locale;
 
 public class AddInvestment extends Fragment {
 
     private Spinner spinnerMutualFund;
     private EditText editTextReturnRate, editTextAmount;
     private Button submitButton;
+
+    private TextView dateText;
+    private TextView timeText;
+
+    private FirebaseFirestore firestore;
+
+    FirebaseAuth auth;
+
+    private String userId;
 
     public AddInvestment() {
         // Required empty public constructor
@@ -48,10 +68,27 @@ public class AddInvestment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_add_investment, container, false);
 
         // Initialize views
+
+        auth = FirebaseAuth.getInstance();
+        userId = String.valueOf(auth.getCurrentUser().getUid());
         spinnerMutualFund = view.findViewById(R.id.spinner_mutual_fund);
         editTextReturnRate = view.findViewById(R.id.edittext_return_rate);
         editTextAmount = view.findViewById(R.id.edittext_amount);
         submitButton = view.findViewById(R.id.submit_button);
+        dateText = view.findViewById(R.id.dateText);
+        timeText = view.findViewById(R.id.timeText);
+        ImageView dateIcon = view.findViewById(R.id.dateIcon);
+        ImageView timeIcon = view.findViewById(R.id.timeIcon);
+
+        dateText.setText(getCurrentDate());
+        timeText.setText(getCurrentTime());
+
+        dateIcon.setOnClickListener(v -> showDatePicker());
+        dateText.setOnClickListener(v -> showDatePicker());
+        timeIcon.setOnClickListener(v -> showTimePicker());
+        timeText.setOnClickListener(v -> showTimePicker());
+
+        firestore = FirebaseFirestore.getInstance();
 
         // Populate Spinner with mutual funds
         String[] mutualFunds = {
@@ -86,13 +123,42 @@ public class AddInvestment extends Fragment {
         submitButton.setOnClickListener(v -> {
             String mutualFund = spinnerMutualFund.getSelectedItem().toString();
             String returnRate = editTextReturnRate.getText().toString();
-            String amount = editTextAmount.getText().toString();
+            String amountStr = editTextAmount.getText().toString();
+            String date = dateText.getText().toString().trim();
+            String time = timeText.getText().toString().trim();
+
+            if (!amountStr.isEmpty()) {
+                double amount = Double.parseDouble(amountStr);
+
+                // Get current year and month
+                String[] dateParts = date.split(" ");
+                String year = dateParts[2];
+                String month = String.format("%02d", Calendar.getInstance().get(Calendar.MONTH) + 1); // Get the current month in MM format
+
+                // Create an ExpenseEntry object
+                AddInvestment.InvestmentEntry expenseEntry = new AddInvestment.InvestmentEntry(mutualFund,returnRate,amount, date, time);
+
+
+                // Save expense entry to Firestore
+                firestore.collection("users").document(userId)
+                        .collection("investment")
+                        .document(year)
+                        .collection(month)
+                        .add(expenseEntry)
+                        .addOnSuccessListener(documentReference -> {
+                            // Update total expense for the user
+                            //updateTotalExpense(year, month, amount);
+                        })
+                        .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save expense entry.", Toast.LENGTH_SHORT).show());
+            } else {
+                Toast.makeText(getContext(), "Please enter an amount.", Toast.LENGTH_SHORT).show();
+            }
 
             // Pass data back to InvestmentsFragment
             Bundle bundle = new Bundle();
             bundle.putString("mutualFund", mutualFund);
             bundle.putString("returnRate", returnRate);
-            bundle.putString("amount", amount);
+            bundle.putString("amount", amountStr);
 
             InvestmentsFragment investmentsFragment = new InvestmentsFragment();
             investmentsFragment.setArguments(bundle);
@@ -112,4 +178,91 @@ public class AddInvestment extends Fragment {
         String amount = editTextAmount.getText().toString().trim();
         submitButton.setEnabled(!returnRate.isEmpty() && !amount.isEmpty());
     }
-}
+
+    private String getCurrentDate() {
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
+        return dateFormat.format(calendar.getTime());
+    }
+
+    private String getCurrentTime() {
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+        return timeFormat.format(calendar.getTime());
+    }
+
+    private void showTimePicker() {
+        Calendar calendar = Calendar.getInstance();
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        int minute = calendar.get(Calendar.MINUTE);
+
+        TimePickerDialog timePickerDialog = new TimePickerDialog(
+                getContext(),
+                (view, selectedHour, selectedMinute) -> {
+                    String amPm = selectedHour >= 12 ? "PM" : "AM";
+                    int hourIn12Format = selectedHour % 12 == 0 ? 12 : selectedHour % 12;
+                    timeText.setText(String.format("%02d:%02d %s", hourIn12Format, selectedMinute, amPm));
+                },
+                hour, minute, false);
+
+        timePickerDialog.show();
+    }
+
+    private void showDatePicker() {
+        Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+        DatePickerDialog datePickerDialog = new DatePickerDialog(
+                getContext(),
+                (view, selectedYear, selectedMonth, selectedDay) -> {
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
+                    Calendar selectedDate = Calendar.getInstance();
+                    selectedDate.set(selectedYear, selectedMonth, selectedDay);
+                    dateText.setText(dateFormat.format(selectedDate.getTime()));
+                },
+                year, month, day);
+
+        datePickerDialog.show();
+    }
+
+    public static class InvestmentEntry {
+        private String mutualFund;
+        private String date;
+        private String time;
+        private String returnRate;
+        private double amount;
+
+        public InvestmentEntry() {
+        }
+
+        public InvestmentEntry(String mutualFund,String returnRate,double amount, String date, String time) {
+            this.mutualFund=mutualFund;
+            this.returnRate=returnRate;
+            this.amount = amount;
+            this.date = date;
+            this.time = time;
+
+        }
+
+        public String getMutualFund() {
+            return mutualFund;
+        }
+
+        public String getDate() {
+            return date;
+        }
+
+        public String getTime() {
+            return time;
+        }
+
+        public String getReturnRate() {
+            return returnRate;
+        }
+
+        public double getAmount() {
+            return amount;
+        }
+    }}
