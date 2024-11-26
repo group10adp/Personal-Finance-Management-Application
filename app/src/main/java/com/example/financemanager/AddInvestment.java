@@ -22,12 +22,14 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.Map;
 
 public class AddInvestment extends Fragment {
 
@@ -150,6 +152,21 @@ public class AddInvestment extends Fragment {
                             //updateTotalExpense(year, month, amount);
                         })
                         .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save expense entry.", Toast.LENGTH_SHORT).show());
+
+                ExpenseFragment.ExpenseEntry expenseEntry1 = new ExpenseFragment.ExpenseEntry(amount, date, time, "Investment", "Online","Invested on mutual funds");
+
+                // Save expense entry to Firestore
+                firestore.collection("users").document(userId)
+                        .collection("expense")
+                        .document(year)
+                        .collection(month)
+                        .add(expenseEntry1)
+                        .addOnSuccessListener(documentReference -> {
+                            // Update total expense for the user
+                            updateTotalExpense(year, month, amount);
+                        })
+                        .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save expense entry.", Toast.LENGTH_SHORT).show());
+
             } else {
                 Toast.makeText(getContext(), "Please enter an amount.", Toast.LENGTH_SHORT).show();
             }
@@ -227,6 +244,41 @@ public class AddInvestment extends Fragment {
         datePickerDialog.show();
     }
 
+    private void updateTotalExpense(String year, String month, double newExpense) {
+        DocumentReference totalExpenseDoc = firestore.collection("users").document(userId)
+                .collection("expense").document(year).collection(month).document("totalExpense");
+
+        // Get the current total expense for the month
+        totalExpenseDoc.get().addOnSuccessListener(documentSnapshot -> {
+            double currentTotal = documentSnapshot.exists() ? documentSnapshot.getDouble("total") : 0.0;
+            double updatedTotal = currentTotal + newExpense;
+
+            // Update the total expense for that month
+            totalExpenseDoc.set(Map.of("total", updatedTotal))
+                    .addOnSuccessListener(aVoid -> {
+                        // Update yearly total expense
+                        updateYearlyExpense(year, newExpense);
+
+                    })
+                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update monthly total expense.", Toast.LENGTH_SHORT).show());
+        }).addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to load current monthly expense.", Toast.LENGTH_SHORT).show());
+    }
+
+    private void updateYearlyExpense(String year, double newExpense) {
+        DocumentReference yearlyExpenseDoc = firestore.collection("users").document(userId)
+                .collection("expense").document("totalYearlyExpense"); // No need to use the year here
+
+        // Check if the totalYearlyExpense document exists
+        yearlyExpenseDoc.get().addOnSuccessListener(documentSnapshot -> {
+            double currentYearlyTotal = documentSnapshot.exists() ? documentSnapshot.getDouble("total") : 0.0;
+            double updatedYearlyTotal = currentYearlyTotal + newExpense;
+
+            // Set or update the total yearly expense in the document
+            yearlyExpenseDoc.set(Map.of("total", updatedYearlyTotal))
+                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update yearly expense.", Toast.LENGTH_SHORT).show());
+        }).addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to load current yearly expense.", Toast.LENGTH_SHORT).show());
+    }
+
     public static class InvestmentEntry {
         private String mutualFund;
         private String date;
@@ -265,4 +317,50 @@ public class AddInvestment extends Fragment {
         public double getAmount() {
             return amount;
         }
-    }}
+    }
+
+    public static class ExpenseEntry {
+        private double amount;
+        private String date;
+        private String time;
+        private String category;
+        private String paymentMode;
+        private String note;
+
+        public ExpenseEntry() {
+        }
+
+        public ExpenseEntry(double amount, String date, String time, String category, String paymentMode,String note) {
+            this.amount = amount;
+            this.date = date;
+            this.time = time;
+            this.category = category;
+            this.paymentMode = paymentMode;
+            this.note=note;
+        }
+
+        public double getAmount() {
+            return amount;
+        }
+
+        public String getDate() {
+            return date;
+        }
+
+        public String getNote() {
+            return note;
+        }
+
+        public String getTime() {
+            return time;
+        }
+
+        public String getCategory() {
+            return category;
+        }
+
+        public String getPaymentMode() {
+            return paymentMode;
+        }
+    }
+}
