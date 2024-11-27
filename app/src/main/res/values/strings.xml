@@ -10,6 +10,14 @@
         <item>Entertainment</item>
         <item>Health</item>
         <item>Education</item>
+        <item>Bills</item>
+        <item>Investments</item>
+        <item>Rent</item>
+        <item>Taxes</item>
+        <item>Insurance</item>
+        <item>Money Transfer</item>
+        <item>Money Transfer</item>
+
     </string-array>
 
     <string-array name="payment_mode_array">
