@@ -12,77 +12,12 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Greeting and Profile Section -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <LinearLayout
-                android:layout_width="200dp"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/time_of_day"
-                    android:text="Good Evening"
-                    android:textSize="16sp"
-                    android:textColor="@android:color/black"
-                    android:layout_marginEnd="8dp" />
-
-                <!-- Second TextView for the name -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Parthib"
-                    android:textSize="21sp"
-                    android:textColor="#383838"
-                    android:textStyle="bold" />
-
-            </LinearLayout>
-            <!-- Profile Icon -->
-            <ImageView
-                android:id="@+id/profile"
-                android:layout_width="46dp"
-                android:layout_height="46dp"
-                android:layout_gravity="end"
-                android:layout_marginLeft="112dp"
-                android:src="@drawable/baseline_account_circle_24" />
-        </LinearLayout>
-
-        <!-- This Month Section -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="16dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/currentTime"
-                android:text="This month"
-                android:textSize="21sp"
-                android:textColor="@android:color/black" />
-
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_marginStart="3dp"
-                android:layout_marginTop="4dp"
-                android:src="@drawable/baseline_arrow_drop_down_24" />
-        </LinearLayout>
-
-
-        <!-- Spending and Income Indicators -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:layout_marginTop="8dp">
+            android:layout_marginTop="2dp">
 
             <!-- Spending -->
             <LinearLayout
@@ -170,9 +105,65 @@
         <!-- Recent Transactions Section -->
 
 
+        <!-- Card for PieChart with Category Info -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="16dp"
+            android:layout_marginHorizontal="8dp"
+            android:elevation="4dp"
+            android:padding="12dp"
+            android:layout_gravity="center"
+            app:cardCornerRadius="16dp">
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-        <!-- Your Budgets Section -->
+                <!-- Pie Chart Section -->
+                <com.github.mikephil.charting.charts.PieChart
+                    android:id="@+id/pieChart"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="10dp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_width="180dp"
+                    android:layout_height="180dp"
+                    android:layout_gravity="center" />
+
+                <!-- Category Information Section -->
+                <LinearLayout
+                    android:id="@+id/legend_container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="4dp"
+                    android:orientation="vertical" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="130dp"
+            android:layout_marginHorizontal="8dp"
+            android:elevation="4dp"
+            android:padding="12dp"
+            android:layout_gravity="center"
+            app:cardCornerRadius="16dp">
+
+            <com.github.mikephil.charting.charts.BarChart
+                android:id="@+id/barChart"
+                android:layout_width="match_parent"
+                android:layout_height="190dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_gravity="center" />
+        </androidx.cardview.widget.CardView>
 
     </LinearLayout>
+
 </ScrollView>

@@ -6,25 +6,51 @@
     android:id="@+id/nav_analysis"
     tools:context=".AnalysisFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-
+    <!-- Toolbar -->
     <androidx.appcompat.widget.Toolbar
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         android:elevation="4dp">
 
-        <!-- Centered Title Text -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Analysis"
             android:textSize="25sp"
             android:textColor="#121212" />
-
     </androidx.appcompat.widget.Toolbar>
 
+    <!-- Dropdown Menu -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginLeft="5dp"
+        android:padding="12dp"
+        android:layout_marginTop="60dp">
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/popUpText"
+            android:text="Finance"
+            android:textSize="21sp"
+            android:textColor="@android:color/black" />
 
+        <ImageView
+            android:id="@+id/dropDown"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="3dp"
+            android:layout_marginTop="4dp"
+            android:src="@drawable/baseline_arrow_drop_down_24" />
+    </LinearLayout>
 
+    <!-- Placeholder for fragments -->
+    <FrameLayout
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="100dp" />
 </FrameLayout>

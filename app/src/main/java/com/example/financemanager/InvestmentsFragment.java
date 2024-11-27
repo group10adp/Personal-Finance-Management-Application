@@ -28,7 +28,7 @@ public class InvestmentsFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_investments, container, false);
 
-        getActivity().getWindow().setStatusBarColor(Color.parseColor("#121212"));
+        //getActivity().getWindow().setStatusBarColor(Color.parseColor("#121212"));
 
         // Initialize RecyclerView
         recyclerView = view.findViewById(R.id.recycler_view_investments);
