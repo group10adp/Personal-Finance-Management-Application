@@ -23,7 +23,7 @@ import java.util.Calendar;
 public class HomeFragment extends Fragment {
 
     private TextView incomeTextView, expenseTextView, balanceTextView, time_of_day;
-    private LinearLayout incomeLayout; // Added this for Income section click
+    private LinearLayout incomeLayout, spendingLayout; // Added spendingLayout for Spending section click
     private FirebaseFirestore firestore;
     private DocumentReference totalIncomeRef, totalExpenseRef;
 
@@ -55,7 +55,8 @@ public class HomeFragment extends Fragment {
         time_of_day.setText("Good " + getTimeOfDay());
 
         profile = view.findViewById(R.id.profile);
-        incomeLayout = view.findViewById(R.id.incomeLayout); // Added the Income layout reference
+        incomeLayout = view.findViewById(R.id.incomeLayout); // Income layout reference
+        spendingLayout = view.findViewById(R.id.spendingLayout); // Spending layout reference
 
         // Initialize Firebase Firestore instance
         firestore = FirebaseFirestore.getInstance();
@@ -88,6 +89,12 @@ public class HomeFragment extends Fragment {
         // Set up income layout click listener
         incomeLayout.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), IncomeDetailsActivity.class);
+            startActivity(intent);
+        });
+
+        // Set up spending layout click listener
+        spendingLayout.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), SpendingDetailsActivity.class);
             startActivity(intent);
         });
 

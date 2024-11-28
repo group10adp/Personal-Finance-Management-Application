@@ -85,13 +85,16 @@
 
             <!-- Spending -->
             <LinearLayout
+                android:id="@+id/spendingLayout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:background="@drawable/bg_red_rounded"
                 android:padding="10dp"
                 android:gravity="center"
-                android:onClick="openSpendingActivity"> <!-- Added onClick here -->
+                android:clickable="true"
+                android:focusable="true">
+
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -127,8 +130,7 @@
                 android:layout_marginStart="8dp"
                 android:id="@+id/incomeLayout"
                 android:clickable="true"
-                android:focusable="true"
-                android:onClick="openIncomeActivity">
+                android:focusable="true">
 
                 <LinearLayout
                     android:layout_width="wrap_content"
