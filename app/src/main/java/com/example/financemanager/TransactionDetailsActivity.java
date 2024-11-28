@@ -3,30 +3,31 @@ package com.example.financemanager;
 import android.os.Bundle;
 import android.util.Log;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.time.format.DateTimeFormatter;
 
-
-public class IncomeDetailsActivity extends AppCompatActivity {
+public class TransactionDetailsActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
-    private IncomeAdapter incomeAdapter;
-    private List<IncomeModel> incomeList;
+    private TransactionAdapter incomeAdapter;
+    private List<TransactionModel> incomeList;
 
     private FirebaseFirestore firestore;
     FirebaseAuth auth;
@@ -35,7 +36,13 @@ public class IncomeDetailsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_income_details);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_transaction_details);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
 
         auth = FirebaseAuth.getInstance();
         userId = String.valueOf(auth.getCurrentUser().getUid());
@@ -48,7 +55,7 @@ public class IncomeDetailsActivity extends AppCompatActivity {
         // Initialize the data list
         incomeList = new ArrayList<>();
 
-        incomeAdapter = new IncomeAdapter(incomeList);
+        incomeAdapter = new TransactionAdapter(incomeList);
         recyclerView.setAdapter(incomeAdapter);
 
         // Initialize Firestore
@@ -59,13 +66,14 @@ public class IncomeDetailsActivity extends AppCompatActivity {
         String month = "11"; // Example: Current month
 
         // Fetch income data from Firestore
-        fetchIncomeData(year, month);
+        fetchTransactionData(year, month);
+
     }
 
-    private void fetchIncomeData(String year, String month) {
+    private void fetchTransactionData(String year, String month) {
         firestore.collection("users")
                 .document(userId)
-                .collection("income")
+                .collection("transaction")
                 .document(year)
                 .collection(month)
                 .get()
@@ -110,8 +118,10 @@ public class IncomeDetailsActivity extends AppCompatActivity {
                                     time = "12:00 AM"; // Default time for invalid entries
                                 }
 
+                                String type = document.getString("type");
+
                                 // Create a new IncomeModel object and add it to the list
-                                incomeList.add(new IncomeModel(amountString, category, date, time));
+                                incomeList.add(new TransactionModel(amountString, category, date, time,type));
                             }
 
                             // Sort the list based on date and time in descending order
@@ -142,6 +152,4 @@ public class IncomeDetailsActivity extends AppCompatActivity {
                     }
                 });
     }
-
-
 }

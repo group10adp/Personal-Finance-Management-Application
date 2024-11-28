@@ -1,17 +1,19 @@
 package com.example.financemanager;
 
-public class IncomeModel {
+public class TransactionModel {
 
     private String price;
     private String category;
     private String date;
     private String time;
+    private String type;
 
-    public IncomeModel(String price, String category, String date, String time) {
+    public TransactionModel(String price, String category, String date, String time,String type) {
         this.price = price;
         this.category = category;
         this.date = date;
         this.time = time;
+        this.type = type;
     }
 
     public String getPrice() {
@@ -44,6 +46,14 @@ public class IncomeModel {
 
     public void setTime(String time) {
         this.time = time;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     @Override

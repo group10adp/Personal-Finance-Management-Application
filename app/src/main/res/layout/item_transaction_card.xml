@@ -8,7 +8,7 @@
     android:layout_marginBottom="8dp"
     app:cardCornerRadius="12dp"
     app:cardElevation="4dp"
-    android:background="#E8F5E9"> <!-- Light green background -->
+    android:background="#F5E8E8"> <!-- Light green background -->
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -30,8 +30,7 @@
                 android:layout_height="wrap_content"
                 android:text="₹5000"
                 android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="#388E3C" /> <!-- Green color for price -->
+                android:textStyle="bold" /> <!-- Red color for price -->
 
             <!-- Category -->
             <TextView
@@ -39,8 +38,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Category"
-                android:textSize="14sp"
-                android:textColor="#4CAF50" /> <!-- Lighter green for category -->
+                android:textSize="14sp" /> <!-- Lighter green for category -->
         </LinearLayout>
 
         <!-- Right section: Date and Time -->

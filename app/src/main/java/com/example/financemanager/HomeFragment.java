@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,13 +13,23 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 
 public class HomeFragment extends Fragment {
 
@@ -35,6 +46,11 @@ public class HomeFragment extends Fragment {
     FirebaseAuth auth;
 
     private String userId;
+
+    private RecyclerView recyclerView;
+    private TransactionAdapter incomeAdapter;
+    private List<TransactionModel> incomeList;
+
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -53,6 +69,7 @@ public class HomeFragment extends Fragment {
         balanceTextView = view.findViewById(R.id.balanceTextView);
         time_of_day = view.findViewById(R.id.time_of_day);
         time_of_day.setText("Good " + getTimeOfDay());
+        TextView seeall =view.findViewById(R.id.tv_see_all);
 
         profile = view.findViewById(R.id.profile);
         incomeLayout = view.findViewById(R.id.incomeLayout); // Income layout reference
@@ -87,6 +104,11 @@ public class HomeFragment extends Fragment {
         });
 
         // Set up income layout click listener
+        seeall.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), TransactionDetailsActivity.class);
+            startActivity(intent);
+        });
+
         incomeLayout.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), IncomeDetailsActivity.class);
             startActivity(intent);
@@ -97,6 +119,27 @@ public class HomeFragment extends Fragment {
             Intent intent = new Intent(getActivity(), SpendingDetailsActivity.class);
             startActivity(intent);
         });
+
+        recyclerView = view.findViewById(R.id.recyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        recyclerView.setHasFixedSize(true);
+
+        // Initialize the data list
+        incomeList = new ArrayList<>();
+
+        incomeAdapter = new TransactionAdapter(incomeList);
+        recyclerView.setAdapter(incomeAdapter);
+
+        // Initialize Firestore
+        firestore = FirebaseFirestore.getInstance();
+
+        // Get the year and month (You can replace this with actual data)
+        String year = "2024"; // Example: Current year
+        String month = "11"; // Example: Current month
+
+        // Fetch income data from Firestore
+        fetchTransactionData(year, month);
+
 
         return view;
     }
@@ -151,4 +194,74 @@ public class HomeFragment extends Fragment {
             return "Evening";
         }
     }
+
+    private void fetchTransactionData(String year, String month) {
+        firestore.collection("users")
+                .document(userId)
+                .collection("transaction")
+                .document(year)
+                .collection(month)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        incomeList.clear(); // Clear any existing data
+
+                        QuerySnapshot querySnapshot = task.getResult();
+                        if (querySnapshot != null) {
+                            // SimpleDateFormat to parse and compare dates and times
+                            SimpleDateFormat formatter = new SimpleDateFormat("dd MMM yyyy hh:mm a");
+
+                            for (QueryDocumentSnapshot document : querySnapshot) {
+                                // Skip the "totalIncome" document
+                                if ("totalIncome".equals(document.getId())) {
+                                    Log.d("IncomeAdapter", "Skipping entry with ID: totalIncome");
+                                    continue;
+                                }
+
+                                // Safely retrieve 'amount', 'category', 'date', 'time', and 'type'
+                                Double amount = document.getDouble("amount");
+                                String amountString = String.valueOf(amount != null ? amount : 0.0);
+                                String category = document.getString("category") != null ? document.getString("category") : "Unknown";
+                                String date = document.getString("date") != null ? document.getString("date") : "01 Jan 1970";
+                                String time = document.getString("time") != null ? document.getString("time") : "12:00 AM";
+                                String type = document.getString("type");
+
+                                // Add the transaction to the list
+                                incomeList.add(new TransactionModel(amountString, category, date, time, type));
+                            }
+
+                            // Sort the list by date and time in descending order
+                            Collections.sort(incomeList, (o1, o2) -> {
+                                try {
+                                    String dateTime1 = o1.getDate() + " " + o1.getTime();
+                                    String dateTime2 = o2.getDate() + " " + o2.getTime();
+
+                                    Date date1 = formatter.parse(dateTime1);
+                                    Date date2 = formatter.parse(dateTime2);
+
+                                    return date2.compareTo(date1); // Descending order
+                                } catch (ParseException e) {
+                                    Log.e("IncomeAdapter", "Error parsing date/time", e);
+                                    return 0; // Keep order if parsing fails
+                                }
+                            });
+
+                            // Limit to the top 4 elements after sorting
+                            if (incomeList.size() > 4) {
+                                incomeList = incomeList.subList(0, 4);
+                            }
+
+                            // Notify the adapter that the data has changed
+                            incomeAdapter.notifyDataSetChanged();
+                        }
+
+                    } else {
+                        // Handle any errors
+                        Log.e("IncomeAdapter", "Error getting documents: " + task.getException());
+                    }
+                });
+    }
+
+
+
 }

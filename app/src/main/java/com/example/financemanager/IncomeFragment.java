@@ -115,6 +115,9 @@ public class IncomeFragment extends Fragment {
             // Create an IncomeEntry object
             IncomeEntry incomeEntry = new IncomeEntry(amount, date, time, category, paymentMode,note);
 
+            String type="Income";
+            TransactionEntry transactionEntry = new TransactionEntry(amount, date, time, category, paymentMode,note,type);
+
             // Save income entry to Firestore
             firestore.collection("users").document(userId)
                     .collection("income")
@@ -126,6 +129,17 @@ public class IncomeFragment extends Fragment {
                         updateTotalIncome(year, month, amount);
                     })
                     .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save income entry.", Toast.LENGTH_SHORT).show());
+
+
+            firestore.collection("users").document(userId)
+                    .collection("transaction")
+                    .document(year)
+                    .collection(month)
+                    .add(transactionEntry)
+                    .addOnSuccessListener(documentReference -> {
+                    })
+                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save income entry.", Toast.LENGTH_SHORT).show());
+
         } else {
             Toast.makeText(getContext(), "Please enter an amount.", Toast.LENGTH_SHORT).show();
         }
@@ -150,6 +164,7 @@ public class IncomeFragment extends Fragment {
                         note1.setText("");
                     })
                     .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update monthly total income.", Toast.LENGTH_SHORT).show());
+
         }).addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to load current monthly income.", Toast.LENGTH_SHORT).show());
     }
 
@@ -240,6 +255,57 @@ public class IncomeFragment extends Fragment {
 
         public double getAmount() {
             return amount;
+        }
+
+        public String getDate() {
+            return date;
+        }
+
+        public String getNote() {
+            return note;
+        }
+
+        public String getTime() {
+            return time;
+        }
+
+        public String getCategory() {
+            return category;
+        }
+
+        public String getPaymentMode() {
+            return paymentMode;
+        }
+    }
+
+    public static class TransactionEntry {
+        private double amount;
+        private String date;
+        private String time;
+        private String category;
+        private String paymentMode;
+        private String note;
+        private String type;
+
+        public TransactionEntry() {
+        }
+
+        public TransactionEntry(double amount, String date, String time, String category, String paymentMode,String note,String type) {
+            this.amount = amount;
+            this.date = date;
+            this.time = time;
+            this.category = category;
+            this.paymentMode = paymentMode;
+            this.note=note;
+            this.type=type;
+        }
+
+        public double getAmount() {
+            return amount;
+        }
+
+        public String getType() {
+            return type;
         }
 
         public String getDate() {
