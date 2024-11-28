@@ -4,42 +4,26 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.github.mikephil.charting.charts.BarChart;
-import com.github.mikephil.charting.charts.PieChart;
-import com.github.mikephil.charting.components.Legend;
-import com.github.mikephil.charting.components.XAxis;
-import com.github.mikephil.charting.components.YAxis;
-import com.github.mikephil.charting.data.BarData;
-import com.github.mikephil.charting.data.BarDataSet;
-import com.github.mikephil.charting.data.BarEntry;
-import com.github.mikephil.charting.data.PieData;
-import com.github.mikephil.charting.data.PieDataSet;
-import com.github.mikephil.charting.data.PieEntry;
-import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.ListenerRegistration;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 
 public class HomeFragment extends Fragment {
 
     private TextView incomeTextView, expenseTextView, balanceTextView, time_of_day;
+    private LinearLayout incomeLayout; // Added this for Income section click
     private FirebaseFirestore firestore;
     private DocumentReference totalIncomeRef, totalExpenseRef;
 
@@ -51,8 +35,6 @@ public class HomeFragment extends Fragment {
     FirebaseAuth auth;
 
     private String userId;
-    PieChart pieChart;
-    BarChart barChart;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -62,28 +44,24 @@ public class HomeFragment extends Fragment {
 
         getActivity().getWindow().setStatusBarColor(Color.TRANSPARENT);
 
-        // Sample data without labels
-
-
         auth = FirebaseAuth.getInstance();
         userId = String.valueOf(auth.getCurrentUser().getUid());
 
         // Initialize the TextViews
         incomeTextView = view.findViewById(R.id.incomeTextView);
         expenseTextView = view.findViewById(R.id.expenseTextView);
-        balanceTextView = view.findViewById(R.id.balanceTextView); // New TextView for balance
-        time_of_day=view.findViewById(R.id.time_of_day);
+        balanceTextView = view.findViewById(R.id.balanceTextView);
+        time_of_day = view.findViewById(R.id.time_of_day);
+        time_of_day.setText("Good " + getTimeOfDay());
 
-        time_of_day.setText("Good "+getTimeOfDay());
-
-        profile=view.findViewById(R.id.profile);
+        profile = view.findViewById(R.id.profile);
+        incomeLayout = view.findViewById(R.id.incomeLayout); // Added the Income layout reference
 
         // Initialize Firebase Firestore instance
         firestore = FirebaseFirestore.getInstance();
         int currentYear = Calendar.getInstance().get(Calendar.YEAR);
         int currentMonth = Calendar.getInstance().get(Calendar.MONTH) + 1;
 
-        // Firebase references for total income, total expense, and balance
         totalIncomeRef = firestore.collection("users").document(userId)
                 .collection("income")
                 .document(String.valueOf(currentYear))
@@ -96,20 +74,21 @@ public class HomeFragment extends Fragment {
                 .collection(String.valueOf(currentMonth))
                 .document("totalExpense");
 
-
-        // Retrieve the total income and total expense from Firestore
+        // Retrieve the total income and expense
         fetchTotalExpenseIncome();
 
+        // Set up profile click listener
+        profile.setOnClickListener(v -> {
+            FirebaseAuth.getInstance().signOut();
+            Intent intent = new Intent(getActivity(), Login.class);
+            startActivity(intent);
+            getActivity().finish();
+        });
 
-
-        profile.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                FirebaseAuth.getInstance().signOut();
-                Intent intent = new Intent(getActivity(), Login.class);
-                startActivity(intent);
-                getActivity().finish();
-            }
+        // Set up income layout click listener
+        incomeLayout.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), IncomeDetailsActivity.class);
+            startActivity(intent);
         });
 
         return view;
@@ -120,7 +99,7 @@ public class HomeFragment extends Fragment {
             if (task.isSuccessful()) {
                 DocumentSnapshot documentSnapshot = task.getResult();
                 if (documentSnapshot != null && documentSnapshot.exists()) {
-                    totalIncome = documentSnapshot.getDouble("total").doubleValue(); // Assuming the field is named "total"
+                    totalIncome = documentSnapshot.getDouble("total").doubleValue();
                     incomeTextView.setText("₹" + totalIncome);
                 } else {
                     incomeTextView.setText("₹0.00");
@@ -135,7 +114,7 @@ public class HomeFragment extends Fragment {
             if (task.isSuccessful()) {
                 DocumentSnapshot documentSnapshot = task.getResult();
                 if (documentSnapshot != null && documentSnapshot.exists()) {
-                    totalExpense = documentSnapshot.getDouble("total").doubleValue(); // Assuming the field is named "total"
+                    totalExpense = documentSnapshot.getDouble("total").doubleValue();
                     expenseTextView.setText("₹" + totalExpense);
                 } else {
                     expenseTextView.setText("₹0.00");
@@ -147,28 +126,16 @@ public class HomeFragment extends Fragment {
         });
     }
 
-
-
-    private double updateBalance() {
+    private void updateBalance() {
         balance = totalIncome - totalExpense;
-
-// Format the balance to 2 decimal places
         String formattedBalance = String.format("Balance: ₹%.2f", balance);
-
-// Update the balance in the TextView
         balanceTextView.setText(formattedBalance);
-        return balance;
     }
 
-
-
-
     public static String getTimeOfDay() {
-        // Get the current time
         Calendar calendar = Calendar.getInstance();
         int hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
 
-        // Determine the time of day
         if (hourOfDay >= 5 && hourOfDay < 12) {
             return "Morning";
         } else if (hourOfDay >= 12 && hourOfDay < 17) {
@@ -177,6 +144,4 @@ public class HomeFragment extends Fragment {
             return "Evening";
         }
     }
-
-
 }

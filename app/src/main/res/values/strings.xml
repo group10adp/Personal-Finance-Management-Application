@@ -24,4 +24,5 @@
         <item>Cash</item>
         <item>Online</item>
     </string-array>
+    <string name="title_activity_income_details">IncomeDetailsActivity</string>
 </resources>
