@@ -14,6 +14,7 @@ import com.google.firebase.firestore.QuerySnapshot;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -58,8 +59,8 @@ public class SpendingDetailsActivity extends AppCompatActivity {
         firestore = FirebaseFirestore.getInstance();
 
         // Get the year and month (You can replace this with actual data)
-        String year = "2024"; // Example: Current year
-        String month = "11"; // Example: Current month
+        String year = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
+        String month = String.valueOf(Calendar.getInstance().get(Calendar.MONTH)+1);
 
         // Fetch income data from Firestore
         fetchExpenseData(year, month);

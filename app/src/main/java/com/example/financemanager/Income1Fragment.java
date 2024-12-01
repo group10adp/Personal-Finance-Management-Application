@@ -114,8 +114,7 @@ public class Income1Fragment extends Fragment {
         // Customize dataset
         PieDataSet dataSet = new PieDataSet(pieEntries, "");
         dataSet.setColors(
-                Color.parseColor("#43A047"),  // Green shade
-                Color.parseColor("#E53935") // Red shade
+                Color.parseColor("#FFBF00")
         ); // Custom colors
         dataSet.setValueTextColor(Color.WHITE);
         dataSet.setValueTextSize(12f);
@@ -137,6 +136,14 @@ public class Income1Fragment extends Fragment {
         pieChart.invalidate();
 
         ArrayList<BarEntry> entries = new ArrayList<>();
+        entries.add(new BarEntry(0, (float) 50));
+        entries.add(new BarEntry(1, (float) 50));
+        entries.add(new BarEntry(0, (float) 50));
+        entries.add(new BarEntry(1, (float) 50));
+        entries.add(new BarEntry(0, (float) 50));
+        entries.add(new BarEntry(1, (float) 50));
+        entries.add(new BarEntry(0, (float) 50));
+        entries.add(new BarEntry(1, (float) 50));
         entries.add(new BarEntry(0, (float) 50));
         entries.add(new BarEntry(1, (float) 50));
 
@@ -296,23 +303,34 @@ public class Income1Fragment extends Fragment {
         RecyclerView legendRecyclerView = getView().findViewById(R.id.legendRecyclerView);
         LegendAdapter legendAdapter = new LegendAdapter(legendItems);
         legendRecyclerView.setAdapter(legendAdapter);
-        legendRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2)); // 3 legends per row
+        legendRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 1)); // 3 legends per row
     }
 
 
 
-    private void updateBarChart(BarChart barChart,Map<String, Double> categoryTotals) {
-        if (totalIncome == 0 && totalExpense == 0) {
+    private void updateBarChart(BarChart barChart, Map<String, Double> categoryIncome) {
+        if (categoryIncome == null || categoryIncome.isEmpty()) {
             // Avoid rendering an empty chart
-
             return;
         }
 
         ArrayList<BarEntry> entries = new ArrayList<>();
+        ArrayList<String> categoryLabels = new ArrayList<>();
 
+        int colorIndex = 0;
+        for (Map.Entry<String, Double> entry : categoryIncome.entrySet()) {
+            if (entry.getKey() == null || entry.getKey().isEmpty()) {
+                continue; // Skip invalid entries
+            }
+
+            // Add category name and income value to the chart
+            entries.add(new BarEntry(colorIndex, entry.getValue().floatValue()));
+            categoryLabels.add(entry.getKey());
+            colorIndex++;
+        }
 
         // Bar chart dataset
-        BarDataSet barDataSet = new BarDataSet(entries, "Income vs Spending");
+        BarDataSet barDataSet = new BarDataSet(entries, "Category-wise Income");
         barDataSet.setColors(
                 Color.parseColor("#DE3163"), Color.parseColor("#FFBF00"), Color.parseColor("#6495ED"),
                 Color.parseColor("#DFFF00"), Color.parseColor("#CCCCFF"), Color.parseColor("#FF7F50"),
@@ -323,25 +341,6 @@ public class Income1Fragment extends Fragment {
         barDataSet.setValueTextColor(Color.WHITE);
         barDataSet.setValueTextSize(12f);
 
-        int colorIndex = 0;
-
-        for (Map.Entry<String, Double> entry : categoryTotals.entrySet()) {
-            // Check if category is null or empty and skip it
-            if (entry.getKey() == null || entry.getKey().isEmpty()) {
-                continue; // Skip this entry
-            }
-
-            String valueAsString = String.format("₹%.1f", entry.getValue());
-
-
-            entries.add(new BarEntry(colorIndex,entry.getValue().floatValue(), entry.getKey()));
-
-
-
-            colorIndex++;
-        }
-
-
         BarData barData = new BarData(barDataSet);
         barData.setBarWidth(0.4f); // Bar width
 
@@ -350,7 +349,6 @@ public class Income1Fragment extends Fragment {
         barChart.setFitBars(true);
         barChart.getDescription().setEnabled(false); // Hide description
         barChart.getLegend().setEnabled(false); // Hide legend
-        barChart.setTouchEnabled(false); // Disable interaction
 
         // Customize X-axis
         XAxis xAxis = barChart.getXAxis();
@@ -360,9 +358,15 @@ public class Income1Fragment extends Fragment {
         xAxis.setValueFormatter(new ValueFormatter() {
             @Override
             public String getFormattedValue(float value) {
-                return value == 0 ? "Income" : "Spending";
+                int index = (int) value;
+                if (index >= 0 && index < categoryLabels.size()) {
+                    return categoryLabels.get(index); // Show category name
+                }
+                return "";
             }
         });
+        xAxis.setLabelRotationAngle(-55f);
+        barChart.setExtraBottomOffset(50f);
 
         // Customize Y-axis
         YAxis leftAxis = barChart.getAxisLeft();
@@ -375,6 +379,7 @@ public class Income1Fragment extends Fragment {
         // Refresh the chart
         barChart.invalidate();
     }
+
 
     private void fetchIncomeByCategory() {
         // Reference to the user's income collection for the current month and year

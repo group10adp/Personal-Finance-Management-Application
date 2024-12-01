@@ -63,6 +63,7 @@ public class HomeFragment extends Fragment {
         auth = FirebaseAuth.getInstance();
         userId = String.valueOf(auth.getCurrentUser().getUid());
 
+
         // Initialize the TextViews
         incomeTextView = view.findViewById(R.id.incomeTextView);
         expenseTextView = view.findViewById(R.id.expenseTextView);
@@ -134,8 +135,8 @@ public class HomeFragment extends Fragment {
         firestore = FirebaseFirestore.getInstance();
 
         // Get the year and month (You can replace this with actual data)
-        String year = "2024"; // Example: Current year
-        String month = "11"; // Example: Current month
+        String year = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
+        String month = String.valueOf(Calendar.getInstance().get(Calendar.MONTH)+1);
 
         // Fetch income data from Firestore
         fetchTransactionData(year, month);
