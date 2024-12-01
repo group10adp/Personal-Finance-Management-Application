@@ -1,10 +1,14 @@
 package com.example.financemanager;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,12 +28,18 @@ import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 public class Expense1Fragment extends Fragment {
@@ -47,6 +57,7 @@ public class Expense1Fragment extends Fragment {
     private String userId;
     PieChart pieChart;
     BarChart barChart;
+    private LinearLayout incomeLayout, spendingLayout;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -67,7 +78,8 @@ public class Expense1Fragment extends Fragment {
         expenseTextView = view.findViewById(R.id.expenseTextView);
         balanceTextView = view.findViewById(R.id.balanceTextView); // New TextView for balance
 
-
+        incomeLayout = view.findViewById(R.id.incomeLayout); // Income layout reference
+        spendingLayout = view.findViewById(R.id.spendingLayout); // Spending layout reference
 
         // Initialize Firebase Firestore instance
         firestore = FirebaseFirestore.getInstance();
@@ -98,8 +110,7 @@ public class Expense1Fragment extends Fragment {
         // Customize dataset
         PieDataSet dataSet = new PieDataSet(pieEntries, "");
         dataSet.setColors(
-                Color.parseColor("#43A047"),  // Green shade
-                Color.parseColor("#E53935") // Red shade
+                Color.parseColor("#FFBF00")
         ); // Custom colors
         dataSet.setValueTextColor(Color.WHITE);
         dataSet.setValueTextSize(12f);
@@ -166,22 +177,19 @@ public class Expense1Fragment extends Fragment {
         // Refresh the chart
         barChart.invalidate();
 
-        // Dynamically create a legend on the right
-        LinearLayout legendContainer = view.findViewById(R.id.legend_container); // Add this in your layout XML
-        String[] labels = {"Income","Spending"};
-        int[] colors = {Color.parseColor("#43A047"),Color.parseColor("#E53935")};
 
-        for (int i = 0; i < labels.length; i++) {
-            View legendItem = inflater.inflate(R.layout.legend_item, legendContainer, false); // Create a custom layout for legend
-            TextView label = legendItem.findViewById(R.id.legend_label);
-            View colorIndicator = legendItem.findViewById(R.id.legend_color);
+        fetchIncomeByCategory();
 
-            label.setText(labels[i]);
-            colorIndicator.setBackgroundColor(colors[i]);
+        incomeLayout.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), IncomeDetailsActivity.class);
+            startActivity(intent);
+        });
 
-            legendContainer.addView(legendItem);
-        }
-
+        // Set up spending layout click listener
+        spendingLayout.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), SpendingDetailsActivity.class);
+            startActivity(intent);
+        });
 
         return view;
     }
@@ -233,5 +241,179 @@ public class Expense1Fragment extends Fragment {
 // Update the balance in the TextView
         balanceTextView.setText(formattedBalance);
         return balance;
+    }
+
+    private void fetchIncomeByCategory() {
+        // Reference to the user's income collection for the current month and year
+        CollectionReference incomeRef = firestore.collection("users").document(userId)
+                .collection("expense")
+                .document(String.valueOf(Calendar.getInstance().get(Calendar.YEAR)))
+                .collection(String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1));
+
+        // Query the income collection
+        incomeRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                QuerySnapshot querySnapshot = task.getResult();
+                if (querySnapshot != null && !querySnapshot.isEmpty()) {
+                    // HashMap to store the total income by category
+                    Map<String, Double> categoryTotals = new HashMap<>();
+
+                    for (QueryDocumentSnapshot document : querySnapshot) {
+                        String category = document.getString("category");
+
+                        // Use a default value if "amount" is missing or null
+                        Double amount = document.getDouble("amount");
+                        if (amount == null) {
+                            Log.w("fetchIncomeByCategory", "Missing or null amount for document: " + document.getId());
+                            amount = 0.0; // Default to 0 if the amount is null
+                        }
+
+                        // Add the amount to the corresponding category
+                        categoryTotals.put(category, categoryTotals.getOrDefault(category, 0.0) + amount);
+                    }
+
+                    // Log or use the category totals as needed
+                    for (Map.Entry<String, Double> entry : categoryTotals.entrySet()) {
+                        Log.d("CategoryTotals", "Category: " + entry.getKey() + ", Total: ₹" + entry.getValue());
+                    }
+
+                    // Update the UI (e.g., pie chart or other views)
+                    updateCategoryPieChart(categoryTotals);
+                    updateBarChart(barChart,categoryTotals);
+                } else {
+                    Log.d("CategoryTotals", "No income data found for categories.");
+                }
+            } else {
+                Log.e("FirestoreError", "Error fetching income data by category", task.getException());
+            }
+        });
+    }
+
+    private void updateCategoryPieChart(Map<String, Double> categoryTotals) {
+        ArrayList<PieEntry> pieEntries = new ArrayList<>();
+        List<LegendItem> legendItems = new ArrayList<>();
+
+        int[] colors = {
+                Color.parseColor("#DE3163"), Color.parseColor("#FFBF00"), Color.parseColor("#6495ED"),
+                Color.parseColor("#DFFF00"), Color.parseColor("#CCCCFF"), Color.parseColor("#FF7F50"),
+                Color.parseColor("#10f72f"), Color.parseColor("#1064f7"), Color.parseColor("#f710b1"),
+                Color.parseColor("#f71010"), Color.parseColor("#3d867d"), Color.parseColor("#566573"),
+                Color.parseColor("#800080"), Color.parseColor("#ccbf00")
+        };
+
+        int colorIndex = 0;
+
+        for (Map.Entry<String, Double> entry : categoryTotals.entrySet()) {
+            // Check if category is null or empty and skip it
+            if (entry.getKey() == null || entry.getKey().isEmpty()) {
+                continue; // Skip this entry
+            }
+
+            String valueAsString = String.format("₹%.1f", entry.getValue());
+
+
+            pieEntries.add(new PieEntry(entry.getValue().floatValue(), entry.getKey()));
+
+            // Add legend item
+            legendItems.add(new LegendItem(entry.getKey(), colors[colorIndex % colors.length],valueAsString));
+            colorIndex++;
+        }
+
+
+        // Update PieChart
+        PieDataSet dataSet = new PieDataSet(pieEntries, "Categories");
+        dataSet.setColors(colors);
+        dataSet.setValueTextColor(Color.WHITE);
+        dataSet.setValueTextSize(12f);
+
+        PieData pieData = new PieData(dataSet);
+        pieChart.setData(pieData);
+        pieChart.setDrawEntryLabels(false);
+        pieChart.setUsePercentValues(true);
+        pieChart.getDescription().setEnabled(false);
+        pieChart.invalidate();
+
+        // Update Legend RecyclerView
+        RecyclerView legendRecyclerView = getView().findViewById(R.id.legendRecyclerView);
+        LegendAdapter legendAdapter = new LegendAdapter(legendItems);
+        legendRecyclerView.setAdapter(legendAdapter);
+        legendRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2)); // 3 legends per row
+    }
+
+
+
+    private void updateBarChart(BarChart barChart,Map<String, Double> categoryTotals) {
+        if (totalIncome == 0 && totalExpense == 0) {
+            // Avoid rendering an empty chart
+
+            return;
+        }
+
+        ArrayList<BarEntry> entries = new ArrayList<>();
+
+
+        // Bar chart dataset
+        BarDataSet barDataSet = new BarDataSet(entries, "Income vs Spending");
+        barDataSet.setColors(
+                Color.parseColor("#DE3163"), Color.parseColor("#FFBF00"), Color.parseColor("#6495ED"),
+                Color.parseColor("#DFFF00"), Color.parseColor("#CCCCFF"), Color.parseColor("#FF7F50"),
+                Color.parseColor("#10f72f"), Color.parseColor("#1064f7"), Color.parseColor("#f710b1"),
+                Color.parseColor("#f71010"), Color.parseColor("#3d867d"), Color.parseColor("#566573"),
+                Color.parseColor("#800080"), Color.parseColor("#ccbf00")
+        ); // Custom colors
+        barDataSet.setValueTextColor(Color.WHITE);
+        barDataSet.setValueTextSize(12f);
+
+        int colorIndex = 0;
+
+        for (Map.Entry<String, Double> entry : categoryTotals.entrySet()) {
+            // Check if category is null or empty and skip it
+            if (entry.getKey() == null || entry.getKey().isEmpty()) {
+                continue; // Skip this entry
+            }
+
+            String valueAsString = String.format("₹%.1f", entry.getValue());
+
+
+            entries.add(new BarEntry(colorIndex,entry.getValue().floatValue(), entry.getKey()));
+
+
+
+            colorIndex++;
+        }
+
+
+        BarData barData = new BarData(barDataSet);
+        barData.setBarWidth(0.4f); // Bar width
+
+        // Configure the BarChart
+        barChart.setData(barData);
+        barChart.setFitBars(true);
+        barChart.getDescription().setEnabled(false); // Hide description
+        barChart.getLegend().setEnabled(false); // Hide legend
+        barChart.setTouchEnabled(false); // Disable interaction
+
+        // Customize X-axis
+        XAxis xAxis = barChart.getXAxis();
+        xAxis.setGranularity(1f);
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setDrawGridLines(false); // Hide vertical grid lines
+        xAxis.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                return value == 0 ? "Income" : "Spending";
+            }
+        });
+
+        // Customize Y-axis
+        YAxis leftAxis = barChart.getAxisLeft();
+        leftAxis.setAxisMinimum(0f); // Start at 0
+        leftAxis.setDrawGridLines(false); // Hide horizontal grid lines
+
+        YAxis rightAxis = barChart.getAxisRight();
+        rightAxis.setEnabled(false); // Hide right axis
+
+        // Refresh the chart
+        barChart.invalidate();
     }
 }

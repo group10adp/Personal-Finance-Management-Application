@@ -1,9 +1,12 @@
 package com.example.financemanager;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -35,6 +38,9 @@ import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 public class Income1Fragment extends Fragment {
@@ -53,6 +59,7 @@ public class Income1Fragment extends Fragment {
     private String userId;
     PieChart pieChart;
     BarChart barChart;
+    private LinearLayout incomeLayout, spendingLayout;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -74,7 +81,8 @@ public class Income1Fragment extends Fragment {
         expenseTextView = view.findViewById(R.id.expenseTextView);
         balanceTextView = view.findViewById(R.id.balanceTextView); // New TextView for balance
 
-
+        incomeLayout = view.findViewById(R.id.incomeLayout); // Income layout reference
+        spendingLayout = view.findViewById(R.id.spendingLayout);
 
         // Initialize Firebase Firestore instance
         firestore = FirebaseFirestore.getInstance();
@@ -135,8 +143,7 @@ public class Income1Fragment extends Fragment {
         // Bar chart dataset
         BarDataSet barDataSet = new BarDataSet(entries, "Income vs Spending");
         barDataSet.setColors(
-                Color.parseColor("#43A047"), // Green shade
-                Color.parseColor("#E53935")  // Red shade
+                Color.parseColor("#FFBF00")
         ); // Custom colors
         barDataSet.setValueTextColor(Color.WHITE);
         barDataSet.setValueTextSize(12f);
@@ -174,25 +181,20 @@ public class Income1Fragment extends Fragment {
         // Refresh the chart
         barChart.invalidate();
 
+        incomeLayout.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), IncomeDetailsActivity.class);
+            startActivity(intent);
+        });
 
+        // Set up spending layout click listener
+        spendingLayout.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), SpendingDetailsActivity.class);
+            startActivity(intent);
+        });
 
         // Dynamically create a legend on the right
-        LinearLayout legendContainer = view.findViewById(R.id.legend_container); // Add this in your layout XML
-        //String[] labels = {"Other","Food","Transport","Shopping","Entertainment","Health","Education","Bills","Investments","Rent","Taxes","Insurance","Money Transfer","Spending"};
-        String[] labels = {"Other","Food"};
-        int[] colors = {Color.parseColor("#43A047"),Color.parseColor("#E53935")};
 
-        for (int i = 0; i < labels.length; i++) {
-            View legendItem = inflater.inflate(R.layout.legend_item, legendContainer, false); // Create a custom layout for legend
-            TextView label = legendItem.findViewById(R.id.legend_label);
-            View colorIndicator = legendItem.findViewById(R.id.legend_color);
-
-            label.setText(labels[i]);
-            colorIndicator.setBackgroundColor(colors[i]);
-
-            legendContainer.addView(legendItem);
-        }
-
+        fetchIncomeByCategory();
 
         return view;
     }
@@ -211,7 +213,7 @@ public class Income1Fragment extends Fragment {
                 incomeTextView.setText("Failed to load income data");
             }
             updateBalance();
-            updatePieChart(pieChart); // Update pie chart after income is fetched
+            //updatePieChart(pieChart); // Update pie chart after income is fetched
             //updateBarChart((BarChart) getView().findViewById(R.id.barChart));
         });
 
@@ -228,7 +230,7 @@ public class Income1Fragment extends Fragment {
                 expenseTextView.setText("Failed to load expense data");
             }
             updateBalance();
-            updatePieChart(pieChart); // Update pie chart after expense is fetched
+            //updatePieChart(pieChart); // Update pie chart after expense is fetched
             //updateBarChart((BarChart) getView().findViewById(R.id.barChart));
         });
     }
@@ -246,47 +248,60 @@ public class Income1Fragment extends Fragment {
         return balance;
     }
 
-    private void updatePieChart(PieChart pieChart) {
-        if (balance == 0) {
-            // Avoid division by zero
+    private void updateCategoryPieChart(Map<String, Double> categoryTotals) {
+        ArrayList<PieEntry> pieEntries = new ArrayList<>();
+        List<LegendItem> legendItems = new ArrayList<>();
 
-            return;
+        int[] colors = {
+                Color.parseColor("#DE3163"), Color.parseColor("#FFBF00"), Color.parseColor("#6495ED"),
+                Color.parseColor("#DFFF00"), Color.parseColor("#CCCCFF"), Color.parseColor("#FF7F50"),
+                Color.parseColor("#10f72f"), Color.parseColor("#1064f7"), Color.parseColor("#f710b1"),
+                Color.parseColor("#f71010"), Color.parseColor("#3d867d"), Color.parseColor("#566573"),
+                Color.parseColor("#800080"), Color.parseColor("#ccbf00")
+        };
+
+        int colorIndex = 0;
+
+        for (Map.Entry<String, Double> entry : categoryTotals.entrySet()) {
+            // Check if category is null or empty and skip it
+            if (entry.getKey() == null || entry.getKey().isEmpty()) {
+                continue; // Skip this entry
+            }
+
+            String valueAsString = String.format("₹%.1f", entry.getValue());
+
+
+            pieEntries.add(new PieEntry(entry.getValue().floatValue(), entry.getKey()));
+
+            // Add legend item
+            legendItems.add(new LegendItem(entry.getKey(), colors[colorIndex % colors.length],valueAsString));
+            colorIndex++;
         }
 
-        float incomePercentage = (float) (totalIncome / balance * 100);
-        float expensePercentage = (float) (totalExpense / balance * 100);
 
-        ArrayList<PieEntry> pieEntries = new ArrayList<>();
-        pieEntries.add(new PieEntry(incomePercentage, "Income"));
-        pieEntries.add(new PieEntry(expensePercentage, "Spending"));
-
-        // Customize dataset
-        PieDataSet dataSet = new PieDataSet(pieEntries, "");
-        dataSet.setColors(
-                Color.parseColor("#43A047"),  // Green shade
-                Color.parseColor("#E53935") // Red shade
-        ); // Custom colors
+        // Update PieChart
+        PieDataSet dataSet = new PieDataSet(pieEntries, "Categories");
+        dataSet.setColors(colors);
         dataSet.setValueTextColor(Color.WHITE);
         dataSet.setValueTextSize(12f);
 
-        // Create PieData and set it to the chart
         PieData pieData = new PieData(dataSet);
         pieChart.setData(pieData);
-
-        // Remove labels from the chart
         pieChart.setDrawEntryLabels(false);
-
-        // Customize the chart
         pieChart.setUsePercentValues(true);
-        pieChart.getDescription().setEnabled(false); // Hide the description
-        pieChart.setEntryLabelTextSize(12f);
-        pieChart.getLegend().setEnabled(false); // Hide the legend
-
-        // Refresh the chart
+        pieChart.getDescription().setEnabled(false);
         pieChart.invalidate();
+
+        // Update Legend RecyclerView
+        RecyclerView legendRecyclerView = getView().findViewById(R.id.legendRecyclerView);
+        LegendAdapter legendAdapter = new LegendAdapter(legendItems);
+        legendRecyclerView.setAdapter(legendAdapter);
+        legendRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2)); // 3 legends per row
     }
 
-    private void updateBarChart(BarChart barChart) {
+
+
+    private void updateBarChart(BarChart barChart,Map<String, Double> categoryTotals) {
         if (totalIncome == 0 && totalExpense == 0) {
             // Avoid rendering an empty chart
 
@@ -294,17 +309,38 @@ public class Income1Fragment extends Fragment {
         }
 
         ArrayList<BarEntry> entries = new ArrayList<>();
-        entries.add(new BarEntry(0, (float) totalIncome, "Income"));
-        entries.add(new BarEntry(1, (float) totalExpense, "Spending"));
+
 
         // Bar chart dataset
         BarDataSet barDataSet = new BarDataSet(entries, "Income vs Spending");
         barDataSet.setColors(
-                Color.parseColor("#43A047"), // Green shade
-                Color.parseColor("#E53935")  // Red shade
+                Color.parseColor("#DE3163"), Color.parseColor("#FFBF00"), Color.parseColor("#6495ED"),
+                Color.parseColor("#DFFF00"), Color.parseColor("#CCCCFF"), Color.parseColor("#FF7F50"),
+                Color.parseColor("#10f72f"), Color.parseColor("#1064f7"), Color.parseColor("#f710b1"),
+                Color.parseColor("#f71010"), Color.parseColor("#3d867d"), Color.parseColor("#566573"),
+                Color.parseColor("#800080"), Color.parseColor("#ccbf00")
         ); // Custom colors
         barDataSet.setValueTextColor(Color.WHITE);
         barDataSet.setValueTextSize(12f);
+
+        int colorIndex = 0;
+
+        for (Map.Entry<String, Double> entry : categoryTotals.entrySet()) {
+            // Check if category is null or empty and skip it
+            if (entry.getKey() == null || entry.getKey().isEmpty()) {
+                continue; // Skip this entry
+            }
+
+            String valueAsString = String.format("₹%.1f", entry.getValue());
+
+
+            entries.add(new BarEntry(colorIndex,entry.getValue().floatValue(), entry.getKey()));
+
+
+
+            colorIndex++;
+        }
+
 
         BarData barData = new BarData(barDataSet);
         barData.setBarWidth(0.4f); // Bar width
@@ -339,5 +375,52 @@ public class Income1Fragment extends Fragment {
         // Refresh the chart
         barChart.invalidate();
     }
+
+    private void fetchIncomeByCategory() {
+        // Reference to the user's income collection for the current month and year
+        CollectionReference incomeRef = firestore.collection("users").document(userId)
+                .collection("income")
+                .document(String.valueOf(Calendar.getInstance().get(Calendar.YEAR)))
+                .collection(String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1));
+
+        // Query the income collection
+        incomeRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                QuerySnapshot querySnapshot = task.getResult();
+                if (querySnapshot != null && !querySnapshot.isEmpty()) {
+                    // HashMap to store the total income by category
+                    Map<String, Double> categoryTotals = new HashMap<>();
+
+                    for (QueryDocumentSnapshot document : querySnapshot) {
+                        String category = document.getString("category");
+
+                        // Use a default value if "amount" is missing or null
+                        Double amount = document.getDouble("amount");
+                        if (amount == null) {
+                            Log.w("fetchIncomeByCategory", "Missing or null amount for document: " + document.getId());
+                            amount = 0.0; // Default to 0 if the amount is null
+                        }
+
+                        // Add the amount to the corresponding category
+                        categoryTotals.put(category, categoryTotals.getOrDefault(category, 0.0) + amount);
+                    }
+
+                    // Log or use the category totals as needed
+                    for (Map.Entry<String, Double> entry : categoryTotals.entrySet()) {
+                        Log.d("CategoryTotals", "Category: " + entry.getKey() + ", Total: ₹" + entry.getValue());
+                    }
+
+                    // Update the UI (e.g., pie chart or other views)
+                    updateCategoryPieChart(categoryTotals);
+                    updateBarChart(barChart,categoryTotals);
+                } else {
+                    Log.d("CategoryTotals", "No income data found for categories.");
+                }
+            } else {
+                Log.e("FirestoreError", "Error fetching income data by category", task.getException());
+            }
+        });
+    }
+
 
 }
