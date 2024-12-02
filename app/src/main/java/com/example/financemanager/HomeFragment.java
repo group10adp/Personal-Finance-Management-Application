@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -62,7 +63,6 @@ public class HomeFragment extends Fragment {
 
         auth = FirebaseAuth.getInstance();
         userId = String.valueOf(auth.getCurrentUser().getUid());
-
 
         // Initialize the TextViews
         incomeTextView = view.findViewById(R.id.incomeTextView);
@@ -135,11 +135,19 @@ public class HomeFragment extends Fragment {
         firestore = FirebaseFirestore.getInstance();
 
         // Get the year and month (You can replace this with actual data)
-        String year = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
-        String month = String.valueOf(Calendar.getInstance().get(Calendar.MONTH)+1);
+        String year = "2024"; // Example: Current year
+        String month = "11"; // Example: Current month
 
         // Fetch income data from Firestore
         fetchTransactionData(year, month);
+
+        Button setUpBudgetButton = view.findViewById(R.id.setUpBudgetButton);
+
+        // Set a click listener to open BudgetSetupActivity
+        setUpBudgetButton.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), BudgetSetupActivity.class);
+            startActivity(intent);
+        });
 
 
         return view;
