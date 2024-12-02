@@ -1,5 +1,6 @@
 package com.example.financemanager;
 
+import android.content.Intent;
 import android.app.Dialog;
 import android.os.Bundle;
 import android.text.Editable;
@@ -35,6 +36,9 @@ public class BudgetSetupActivity extends AppCompatActivity {
         yearlyButton = findViewById(R.id.yearly_button);
         budgetLimitInput = findViewById(R.id.budget_limit_input);
         nextButton = findViewById(R.id.next_button);
+
+        // Disable the Next button by default
+        nextButton.setEnabled(false);
 
         // Set up the calendar instance
         calendar = Calendar.getInstance();
@@ -72,7 +76,8 @@ public class BudgetSetupActivity extends AppCompatActivity {
 
         // Set an OnClickListener for the "Next" button
         nextButton.setOnClickListener(v -> {
-            // TODO: Implement logic for next action (e.g., save data, navigate to another activity)
+            Intent intent = new Intent(BudgetSetupActivity.this, BudgetDetailsActivity.class);
+            startActivity(intent);
         });
     }
 

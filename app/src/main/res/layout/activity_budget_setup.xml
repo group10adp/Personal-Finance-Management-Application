@@ -9,22 +9,25 @@
     tools:context=".BudgetSetupActivity">
 
     <!-- Black strip at the top -->
+
+    <!-- Monthly/Yearly toggle -->
     <TextView
         android:id="@+id/top_bar"
         android:layout_width="0dp"
         android:layout_height="56dp"
         android:background="@android:color/black"
+        android:contentDescription="Top bar with title Set Up Budget"
         android:gravity="center_vertical"
         android:paddingStart="16dp"
         android:text="Set Up Budget"
         android:textColor="@android:color/white"
         android:textSize="18sp"
         android:textStyle="bold"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Monthly/Yearly toggle -->
     <LinearLayout
         android:id="@+id/toggle_group"
         android:layout_width="0dp"
@@ -49,7 +52,8 @@
             android:textColor="@android:color/black"
             android:textSize="16sp"
             android:clickable="true"
-            android:focusable="true" />
+            android:focusable="true"
+            android:contentDescription="Monthly toggle button" />
 
         <!-- Yearly button -->
         <TextView
@@ -63,7 +67,8 @@
             android:textColor="@android:color/black"
             android:textSize="16sp"
             android:clickable="true"
-            android:focusable="true" />
+            android:focusable="true"
+            android:contentDescription="Yearly toggle button" />
     </LinearLayout>
 
     <!-- "Budget for" section -->
@@ -74,6 +79,7 @@
         android:text="Budget for"
         android:textSize="16sp"
         android:textStyle="bold"
+        android:contentDescription="Label for budget period"
         app:layout_constraintTop_toBottomOf="@id/toggle_group"
         app:layout_constraintStart_toStartOf="parent"
         android:layout_marginStart="16dp"
@@ -90,6 +96,7 @@
         android:layout_marginStart="16dp"
         android:clickable="true"
         android:focusable="true"
+        android:contentDescription="Selected month and year for budget"
         app:layout_constraintTop_toBottomOf="@id/budget_for_label"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -101,6 +108,7 @@
         android:text="What's your total budget limit?"
         android:textSize="16sp"
         android:textStyle="bold"
+        android:contentDescription="Label for budget input"
         android:layout_marginStart="16dp"
         android:layout_marginTop="24dp"
         app:layout_constraintTop_toBottomOf="@id/selected_month_year"
@@ -115,6 +123,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginTop="8dp"
+        android:contentDescription="Input field for budget limit"
         app:layout_constraintTop_toBottomOf="@id/budget_limit_label"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -130,6 +139,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginTop="24dp"
+        android:contentDescription="Next button to proceed"
         app:layout_constraintTop_toBottomOf="@id/budget_limit_input"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
