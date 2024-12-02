@@ -2,7 +2,9 @@ package com.example.financemanager;
 
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.Map;
+import androidx.appcompat.app.AlertDialog;
 
 public class ExpenseFragment extends Fragment {
 
@@ -38,6 +41,8 @@ public class ExpenseFragment extends Fragment {
     FirebaseAuth auth;
 
     private String userId;
+
+    CustomLoadingDialog loadingDialog;
 
     @Nullable
     @Override
@@ -67,6 +72,8 @@ public class ExpenseFragment extends Fragment {
         timeIcon.setOnClickListener(v -> showTimePicker());
         timeText.setOnClickListener(v -> showTimePicker());
 
+        loadingDialog = new CustomLoadingDialog(getContext());
+
         // Set up ArrayAdapter for categorySpinner
         ArrayAdapter<CharSequence> categoryAdapter = ArrayAdapter.createFromResource(
                 requireContext(),
@@ -89,7 +96,14 @@ public class ExpenseFragment extends Fragment {
         firestore = FirebaseFirestore.getInstance();
 
         // Set click listener on save button
-        saveButton.setOnClickListener(v -> saveExpense());
+        saveButton.setOnClickListener(v -> {
+
+            saveExpense(); // Call the saveIncome method
+            loadingDialog.show();
+
+            // Simulate saving operation or dismiss dialog after completion
+            new Handler().postDelayed(() -> loadingDialog.dismiss(), 2000); // Dismiss after 2 seconds (example)
+        });
 
         return view;
     }
@@ -161,6 +175,7 @@ public class ExpenseFragment extends Fragment {
                         Toast.makeText(getContext(), "Expense saved successfully!", Toast.LENGTH_SHORT).show();
                         amountEditText.setText("");
                         note1.setText("");
+                        loadingDialog.dismiss();
                     })
                     .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update monthly total expense.", Toast.LENGTH_SHORT).show());
         }).addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to load current monthly expense.", Toast.LENGTH_SHORT).show());
@@ -323,6 +338,35 @@ public class ExpenseFragment extends Fragment {
 
         public String getPaymentMode() {
             return paymentMode;
+        }
+    }
+
+    public class CustomLoadingDialog {
+        private final AlertDialog dialog;
+
+        public CustomLoadingDialog(Context context) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            LayoutInflater inflater = LayoutInflater.from(context);
+
+            View view = inflater.inflate(R.layout.custom_loading_dialog, null);
+            builder.setView(view);
+
+            // Disable canceling the dialog by clicking outside
+            builder.setCancelable(false);
+
+            dialog = builder.create();
+        }
+
+        public void show() {
+            if (!dialog.isShowing()) {
+                dialog.show();
+            }
+        }
+
+        public void dismiss() {
+            if (dialog.isShowing()) {
+                dialog.dismiss();
+            }
         }
     }
 }

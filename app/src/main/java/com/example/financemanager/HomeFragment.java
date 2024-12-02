@@ -249,7 +249,7 @@ public class HomeFragment extends Fragment {
 
                             // Limit to the top 4 elements after sorting
                             if (incomeList.size() > 4) {
-                                incomeList = incomeList.subList(0, 4);
+                                incomeList.subList(4, incomeList.size()).clear(); // Remove elements beyond the 4th
                             }
 
                             // Notify the adapter that the data has changed

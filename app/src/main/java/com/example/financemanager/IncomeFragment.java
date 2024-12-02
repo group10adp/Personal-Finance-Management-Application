@@ -2,8 +2,10 @@ package com.example.financemanager;
 
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -40,6 +43,8 @@ public class IncomeFragment extends Fragment {
     FirebaseAuth auth;
 
     private String userId; // Placeholder, use actual user ID from authentication
+
+    CustomLoadingDialog loadingDialog;
 
     @Nullable
     @Override
@@ -69,6 +74,11 @@ public class IncomeFragment extends Fragment {
         timeIcon.setOnClickListener(v -> showTimePicker());
         timeText.setOnClickListener(v -> showTimePicker());
 
+        loadingDialog = new CustomLoadingDialog(getContext());
+
+
+
+
         // Set up ArrayAdapter for categorySpinner
         ArrayAdapter<CharSequence> categoryAdapter = ArrayAdapter.createFromResource(
                 requireContext(),
@@ -91,7 +101,14 @@ public class IncomeFragment extends Fragment {
         firestore = FirebaseFirestore.getInstance();
 
         // Set click listener on save button
-        saveButton.setOnClickListener(v -> saveIncome());
+        saveButton.setOnClickListener(v -> {
+
+            saveIncome(); // Call the saveIncome method
+            loadingDialog.show();
+
+            // Simulate saving operation or dismiss dialog after completion
+            new Handler().postDelayed(() -> loadingDialog.dismiss(), 2000); // Dismiss after 2 seconds (example)
+        });
 
         return view;
     }
@@ -162,6 +179,7 @@ public class IncomeFragment extends Fragment {
                         Toast.makeText(getContext(), "Income saved successfully!", Toast.LENGTH_SHORT).show();
                         amountEditText.setText("");
                         note1.setText("");
+                        loadingDialog.dismiss();
                     })
                     .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update monthly total income.", Toast.LENGTH_SHORT).show());
 
@@ -328,4 +346,34 @@ public class IncomeFragment extends Fragment {
             return paymentMode;
         }
     }
+
+    public class CustomLoadingDialog {
+        private final AlertDialog dialog;
+
+        public CustomLoadingDialog(Context context) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            LayoutInflater inflater = LayoutInflater.from(context);
+
+            View view = inflater.inflate(R.layout.custom_loading_dialog, null);
+            builder.setView(view);
+
+            // Disable canceling the dialog by clicking outside
+            builder.setCancelable(false);
+
+            dialog = builder.create();
+        }
+
+        public void show() {
+            if (!dialog.isShowing()) {
+                dialog.show();
+            }
+        }
+
+        public void dismiss() {
+            if (dialog.isShowing()) {
+                dialog.dismiss();
+            }
+        }
+    }
+
 }

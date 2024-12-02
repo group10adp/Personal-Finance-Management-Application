@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.material3)
     implementation ("com.facebook.shimmer:shimmer:0.5.0")
     testImplementation(libs.junit)
+    implementation ("com.airbnb.android:lottie:5.2.0")
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(platform(libs.compose.bom))
