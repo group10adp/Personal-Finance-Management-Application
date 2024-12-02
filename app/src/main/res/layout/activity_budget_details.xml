@@ -555,7 +555,7 @@
                     android:padding="8dp">
 
                     <TextView
-                        android:id="@+id/category_name_insurence"
+                        android:id="@+id/category_name_insurance"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Insurence"
@@ -566,7 +566,7 @@
                         app:layout_constraintBottom_toBottomOf="parent" />
 
                     <EditText
-                        android:id="@+id/category_input_insurence"
+                        android:id="@+id/category_input_insurance"
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
                         android:inputType="number"
@@ -594,7 +594,7 @@
                     android:padding="8dp">
 
                     <TextView
-                        android:id="@+id/category_name_money_trnsfer"
+                        android:id="@+id/category_name_money_transfer"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Money Transfer"
@@ -605,7 +605,7 @@
                         app:layout_constraintBottom_toBottomOf="parent" />
 
                     <EditText
-                        android:id="@+id/category_input_money_trnsfer"
+                        android:id="@+id/category_input_money_transfer"
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
                         android:inputType="number"

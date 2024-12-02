@@ -75,10 +75,27 @@ public class BudgetSetupActivity extends AppCompatActivity {
         });
 
         // Set an OnClickListener for the "Next" button
+        // Set an OnClickListener for the "Next" button
         nextButton.setOnClickListener(v -> {
-            Intent intent = new Intent(BudgetSetupActivity.this, BudgetDetailsActivity.class);
-            startActivity(intent);
+            // Get the total budget amount entered by the user
+            String budgetLimit = budgetLimitInput.getText().toString().trim();
+
+            // Check if the input is valid
+            if (!budgetLimit.isEmpty()) {
+                // Convert the input to a number (for example, an integer or double)
+                double totalBudget = Double.parseDouble(budgetLimit);
+
+                // Create an intent to go to the next activity
+                Intent intent = new Intent(BudgetSetupActivity.this, BudgetDetailsActivity.class);
+
+                // Pass the total budget amount to the next activity
+                intent.putExtra("totalBudget", totalBudget);
+
+                // Start the next activity
+                startActivity(intent);
+            }
         });
+
     }
 
     // Sets up the behavior for the toggle buttons
