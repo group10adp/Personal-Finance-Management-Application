@@ -151,7 +151,7 @@ public class BudgetDetailsActivity extends AppCompatActivity {
                 .document("total-budget") // Document ID for total budget
                 .set(new TotalBudgetEntry(totalamount))  // TotalBudgetEntry is a custom class to store the total amount
                 .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(BudgetDetailsActivity.this, "Total budget saved successfully!", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(BudgetDetailsActivity.this, "Total budget saved successfully!", Toast.LENGTH_SHORT).show();
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(BudgetDetailsActivity.this, "Failed to save total budget.", Toast.LENGTH_SHORT).show();
@@ -165,7 +165,7 @@ public class BudgetDetailsActivity extends AppCompatActivity {
                 .document("total-remaining-budget") // Document ID for total budget
                 .set(new TotalBudgetEntry(totalamount))  // TotalBudgetEntry is a custom class to store the total amount
                 .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(BudgetDetailsActivity.this, "Total budget saved successfully!", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(BudgetDetailsActivity.this, "Total budget saved successfully!", Toast.LENGTH_SHORT).show();
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(BudgetDetailsActivity.this, "Failed to save total budget.", Toast.LENGTH_SHORT).show();
@@ -184,6 +184,11 @@ public class BudgetDetailsActivity extends AppCompatActivity {
         saveCategoryData(categoryInputTax, "Tax");
         saveCategoryData(categoryInputInsurance, "Insurance");
         saveCategoryData(categoryInputMoneyTransfer, "Money Transfer");
+
+        Toast.makeText(BudgetDetailsActivity.this, "Budget details saved successfully!", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(BudgetDetailsActivity.this, BudgetDisplayActivity.class);
+        startActivity(intent);
+        finish();
     }
 
     // Helper method to save data for each category
@@ -201,7 +206,7 @@ public class BudgetDetailsActivity extends AppCompatActivity {
                     .document("budget-entry") // Use a static document ID or dynamically generate one
                     .set(new BudgetEntry(amount))  // Save the budget entry (ensure that BudgetEntry is properly defined)
                     .addOnSuccessListener(aVoid -> {
-                        Toast.makeText(BudgetDetailsActivity.this, "Budget saved successfully!", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(BudgetDetailsActivity.this, "Budget saved successfully!", Toast.LENGTH_SHORT).show();
                     })
                     .addOnFailureListener(e -> {
                         Toast.makeText(BudgetDetailsActivity.this, "Failed to save budget entry.", Toast.LENGTH_SHORT).show();
@@ -218,11 +223,13 @@ public class BudgetDetailsActivity extends AppCompatActivity {
                     .document("remaining-budget-entry") // Use a static document ID or dynamically generate one
                     .set(new RemainingBudgetEntry(amount))  // Save the remaining budget entry (ensure that RemainingBudgetEntry is properly defined)
                     .addOnSuccessListener(aVoid -> {
-                        Toast.makeText(BudgetDetailsActivity.this, "Remaining budget saved successfully!", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(BudgetDetailsActivity.this, "Remaining budget saved successfully!", Toast.LENGTH_SHORT).show();
                     })
                     .addOnFailureListener(e -> {
                         Toast.makeText(BudgetDetailsActivity.this, "Failed to save remaining budget entry.", Toast.LENGTH_SHORT).show();
                     });
+
+
 
         }
     }

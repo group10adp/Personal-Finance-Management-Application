@@ -79,7 +79,10 @@ public class HomeFragment extends Fragment {
         // Initialize Firebase Firestore instance
         firestore = FirebaseFirestore.getInstance();
         int currentYear = Calendar.getInstance().get(Calendar.YEAR);
-        int currentMonth = Calendar.getInstance().get(Calendar.MONTH) + 1;
+
+        int currentMonth = Calendar.getInstance().get(Calendar.MONTH) + 01;
+
+        Log.d("year",""+currentMonth);
 
         totalIncomeRef = firestore.collection("users").document(userId)
                 .collection("income")
@@ -161,11 +164,12 @@ public class HomeFragment extends Fragment {
                 if (documentSnapshot != null && documentSnapshot.exists()) {
                     totalIncome = documentSnapshot.getDouble("total").doubleValue();
                     incomeTextView.setText("₹" + totalIncome);
+                    Log.d("expense",""+totalExpense+" "+totalIncome);
                 } else {
                     incomeTextView.setText("₹0.00");
                 }
             } else {
-                incomeTextView.setText("Failed to load income data");
+                incomeTextView.setText("₹0.00");
             }
             updateBalance();
         });
@@ -180,7 +184,7 @@ public class HomeFragment extends Fragment {
                     expenseTextView.setText("₹0.00");
                 }
             } else {
-                expenseTextView.setText("Failed to load expense data");
+                expenseTextView.setText("₹0.00");
             }
             updateBalance();
         });

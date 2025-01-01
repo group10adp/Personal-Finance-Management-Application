@@ -122,7 +122,7 @@ public class ExpenseFragment extends Fragment {
             // Get current year and month
             String[] dateParts = date.split(" ");
             String year = dateParts[2];
-            String month = String.format("%02d", Calendar.getInstance().get(Calendar.MONTH) + 1); // Get the current month in MM format
+            String month = String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1); // Get the current month in MM format
 
             // Create an ExpenseEntry object
             ExpenseEntry expenseEntry = new ExpenseEntry(amount, date, time, category, paymentMode,note);

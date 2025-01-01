@@ -1,21 +1,22 @@
 package com.example.financemanager;
 
-import android.content.Intent;
+import static java.security.AccessController.getContext;
+
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.TextView;
+import android.widget.Toast;
 
-import androidx.fragment.app.Fragment;
+import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-
+import com.github.lzyzsd.circleprogress.DonutProgress;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.XAxis;
@@ -41,66 +42,60 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+public class BudgetDisplayActivity extends AppCompatActivity {
 
-public class Expense1Fragment extends Fragment {
-    private TextView incomeTextView, expenseTextView, balanceTextView, time_of_day;
     private FirebaseFirestore firestore;
-    private DocumentReference totalIncomeRef, totalExpenseRef;
-
-    private ImageView profile;
-
-    private double totalIncome = 0.0, totalExpense = 0.0;
-    private double balance;
-
+    private TextView budgetTextView, remainingTextView,spentTextView;
+    String userId, year, month;
     FirebaseAuth auth;
-
-    private String userId;
+    private DonutProgress donutProgress;
+    private DocumentReference totalIncomeRef, totalExpenseRef;
     PieChart pieChart;
     BarChart barChart;
-    private LinearLayout incomeLayout, spendingLayout;
+    private double totalIncome = 0.0, totalExpense = 0.0;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        View view= inflater.inflate(R.layout.fragment_expense1, container, false);
-
-        pieChart = view.findViewById(R.id.pieChart);
-        barChart = view.findViewById(R.id.barChart);
-        // Sample data without labels
-
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_budget_display);
 
         auth = FirebaseAuth.getInstance();
         userId = String.valueOf(auth.getCurrentUser().getUid());
+        year = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
+        month = String.valueOf(Calendar.getInstance().get(Calendar.MONTH)+1);
 
-        // Initialize the TextViews
-        incomeTextView = view.findViewById(R.id.incomeTextView);
-        expenseTextView = view.findViewById(R.id.expenseTextView);
-        balanceTextView = view.findViewById(R.id.balanceTextView); // New TextView for balance
+        pieChart = findViewById(R.id.pieChart);
+        barChart = findViewById(R.id.barChart);
 
-        incomeLayout = view.findViewById(R.id.incomeLayout); // Income layout reference
-        spendingLayout = view.findViewById(R.id.spendingLayout); // Spending layout reference
-
-        // Initialize Firebase Firestore instance
         firestore = FirebaseFirestore.getInstance();
-        int currentYear = Calendar.getInstance().get(Calendar.YEAR);
-        int currentMonth = Calendar.getInstance().get(Calendar.MONTH) + 1;
+        budgetTextView = findViewById(R.id.tv_budget);
+        remainingTextView = findViewById(R.id.tv_available_budget);
+        spentTextView = findViewById(R.id.tv_total_spent);
+        donutProgress = findViewById(R.id.donutProgress);
 
-        // Firebase references for total income, total expense, and balance
         totalIncomeRef = firestore.collection("users").document(userId)
                 .collection("income")
-                .document(String.valueOf(currentYear))
-                .collection(String.valueOf(currentMonth))
+                .document(String.valueOf(year))
+                .collection(String.valueOf(month))
                 .document("totalIncome");
 
         totalExpenseRef = firestore.collection("users").document(userId)
                 .collection("expense")
-                .document(String.valueOf(currentYear))
-                .collection(String.valueOf(currentMonth))
+                .document(String.valueOf(year))
+                .collection(String.valueOf(month))
                 .document("totalExpense");
 
 
-        // Retrieve the total income and total expense from Firestore
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+
+        // Replace these with actual values
+
+        fetchBudgetDetails(userId, year, month);
         fetchTotalExpenseIncome();
 
         ArrayList<PieEntry> pieEntries = new ArrayList<>();
@@ -177,22 +172,58 @@ public class Expense1Fragment extends Fragment {
         // Refresh the chart
         barChart.invalidate();
 
-
         fetchIncomeByCategory();
 
-        incomeLayout.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), IncomeDetailsActivity.class);
-            startActivity(intent);
-        });
-
-        // Set up spending layout click listener
-        spendingLayout.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), SpendingDetailsActivity.class);
-            startActivity(intent);
-        });
-
-        return view;
     }
+
+    private void fetchBudgetDetails(String userId, String year, String month) {
+        // Fetch total budget
+        firestore.collection("users")
+                .document(userId)
+                .collection("budget")
+                .document(year)
+                .collection(month)
+                .document("total-budget")
+                .get()
+                .addOnSuccessListener(totalBudgetSnapshot -> {
+                    if (totalBudgetSnapshot.exists()) {
+                        double totalBudget = totalBudgetSnapshot.getDouble("amount");
+
+                        // Fetch remaining budget
+                        firestore.collection("users")
+                                .document(userId)
+                                .collection("budget")
+                                .document(year)
+                                .collection(month)
+                                .document("total-remaining-budget")
+                                .get()
+                                .addOnSuccessListener(remainingBudgetSnapshot -> {
+                                    if (remainingBudgetSnapshot.exists()) {
+                                        double remainingBudget = remainingBudgetSnapshot.getDouble("amount");
+
+                                        // Calculate the percentage
+                                        double percentageRemaining = (remainingBudget / totalBudget) * 100;
+                                        percentageRemaining=100-percentageRemaining;
+                                        String formattedPercentage = String.format("%.1f%%", percentageRemaining);
+                                        donutProgress.setStartingDegree(270);
+                                        donutProgress.setProgress((float) percentageRemaining);
+                                        donutProgress.setText(formattedPercentage);
+                                        // Update UI
+                                        budgetTextView.setText(String.format("Budget: ₹"+totalBudget));
+                                        remainingTextView.setText(String.format(String.valueOf(remainingBudget)));
+                                        //percentageTextView.setText(String.format("Remaining Percentage: %.2f%%", percentageRemaining));
+                                    } else {
+                                        Toast.makeText(this, "Remaining budget not found!", Toast.LENGTH_SHORT).show();
+                                    }
+                                })
+                                .addOnFailureListener(e -> Toast.makeText(this, "Failed to fetch remaining budget.", Toast.LENGTH_SHORT).show());
+                    } else {
+                        Toast.makeText(this, "Total budget not found!", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> Toast.makeText(this, "Failed to fetch total budget.", Toast.LENGTH_SHORT).show());
+    }
+
 
     private void fetchTotalExpenseIncome() {
         totalIncomeRef.get().addOnCompleteListener(task -> {
@@ -200,16 +231,12 @@ public class Expense1Fragment extends Fragment {
                 DocumentSnapshot documentSnapshot = task.getResult();
                 if (documentSnapshot != null && documentSnapshot.exists()) {
                     totalIncome = documentSnapshot.getDouble("total").doubleValue(); // Assuming the field is named "total"
-                    incomeTextView.setText("₹" + totalIncome);
                 } else {
-                    incomeTextView.setText("₹0.00");
+
                 }
             } else {
-                incomeTextView.setText("Failed to load income data");
+
             }
-            updateBalance();
-            //updatePieChart(pieChart); // Update pie chart after income is fetched
-            //updateBarChart((BarChart) getView().findViewById(R.id.barChart));
         });
 
         totalExpenseRef.get().addOnCompleteListener(task -> {
@@ -217,31 +244,16 @@ public class Expense1Fragment extends Fragment {
                 DocumentSnapshot documentSnapshot = task.getResult();
                 if (documentSnapshot != null && documentSnapshot.exists()) {
                     totalExpense = documentSnapshot.getDouble("total").doubleValue(); // Assuming the field is named "total"
-                    expenseTextView.setText("₹" + totalExpense);
+                    spentTextView.setText(String.format(String.valueOf(totalExpense)));
+
                 } else {
-                    expenseTextView.setText("₹0.00");
                 }
             } else {
-                expenseTextView.setText("Failed to load expense data");
             }
-            updateBalance();
-            //updatePieChart(pieChart); // Update pie chart after expense is fetched
-            //updateBarChart((BarChart) getView().findViewById(R.id.barChart));
+
         });
     }
 
-
-
-    private double updateBalance() {
-        balance = totalIncome - totalExpense;
-
-// Format the balance to 2 decimal places
-        String formattedBalance = String.format("Balance: ₹%.2f", balance);
-
-// Update the balance in the TextView
-        balanceTextView.setText(formattedBalance);
-        return balance;
-    }
 
     private void fetchIncomeByCategory() {
         // Reference to the user's income collection for the current month and year
@@ -258,27 +270,42 @@ public class Expense1Fragment extends Fragment {
                     // HashMap to store the total income by category
                     Map<String, Double> categoryTotals = new HashMap<>();
 
-                    for (QueryDocumentSnapshot document : querySnapshot) {
-                        String category = document.getString("category");
 
-                        // Use a default value if "amount" is missing or null
-                        Double amount = document.getDouble("amount");
-                        if (amount == null) {
-                            Log.w("fetchIncomeByCategory", "Missing or null amount for document: " + document.getId());
-                            amount = 0.0; // Default to 0 if the amount is null
-                        }
 
-                        // Add the amount to the corresponding category
-                        categoryTotals.put(category, categoryTotals.getOrDefault(category, 0.0) + amount);
-                    }
+                    // Define a helper function to fetch and update data for a single category
+                    fetchCategoryData(userId, year, month, "Others", categoryTotals);
+                    fetchCategoryData(userId, year, month, "Transport", categoryTotals);
+                    fetchCategoryData(userId, year, month, "Shopping", categoryTotals);
+                    fetchCategoryData(userId, year, month, "Entertainment", categoryTotals);
+                    fetchCategoryData(userId, year, month,"Health", categoryTotals);
+                    fetchCategoryData(userId, year, month,"Education", categoryTotals);
+                    fetchCategoryData(userId, year, month,"Bill", categoryTotals);
+                    fetchCategoryData(userId, year, month, "Investment", categoryTotals);
+                    fetchCategoryData(userId, year, month,"Rent", categoryTotals);
+                    fetchCategoryData(userId, year, month, "Tax", categoryTotals);
+                    fetchCategoryData(userId, year, month, "Insurance", categoryTotals);
+                    fetchCategoryData(userId, year, month, "Money Transfer", categoryTotals);
 
-                    // Log or use the category totals as needed
-                    for (Map.Entry<String, Double> entry : categoryTotals.entrySet()) {
-                        Log.d("CategoryTotals", "Category: " + entry.getKey() + ", Total: ₹" + entry.getValue());
-                    }
+//
+//
+//                    Log.d("FinalCategoryTotals", "Category Totals: " + categoryTotals);
+
+
+
+//                    categoryTotals.put("Others", 576.0);
+//                    categoryTotals.put("Entertainment", 565.0);
+//                    categoryTotals.put("Health", 156.0);
+//                    categoryTotals.put("Education", 256.0);
+//                    categoryTotals.put("Insurance", 356.0);
+//                    categoryTotals.put("Money Transfer", 556.0);
+//                    categoryTotals.put("Bill", 356.0);
+//                    categoryTotals.put("Shopping", 596.0);
+//                    categoryTotals.put("Tax", 5656.0);
+//                    categoryTotals.put("Transport", 56.0);
+//                    categoryTotals.put("Investment", 6556.0);
+//                    categoryTotals.put("Rent", 856.0);
 
                     Log.d("FinalCategoryTotals", "Category Totals: " + categoryTotals);
-
                     // Update the UI (e.g., pie chart or other views)
                     updateCategoryPieChart(categoryTotals);
                     updateBarChart(barChart,categoryTotals);
@@ -336,10 +363,10 @@ public class Expense1Fragment extends Fragment {
         pieChart.invalidate();
 
         // Update Legend RecyclerView
-        RecyclerView legendRecyclerView = getView().findViewById(R.id.legendRecyclerView);
+        RecyclerView legendRecyclerView = findViewById(R.id.legendRecyclerView);
         LegendAdapter legendAdapter = new LegendAdapter(legendItems);
         legendRecyclerView.setAdapter(legendAdapter);
-        legendRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 1)); // 3 legends per row
+        legendRecyclerView.setLayoutManager(new GridLayoutManager(BudgetDisplayActivity.this, 1)); // 3 legends per row
     }
 
 
@@ -414,5 +441,38 @@ public class Expense1Fragment extends Fragment {
 
         // Refresh the chart
         barChart.invalidate();
+    }
+
+    private void fetchCategoryData(String userId, String year, String month, String category, Map<String, Double> categoryTotals) {
+        DocumentReference budgetRef = firestore.collection("users")
+                .document(userId)
+                .collection("budget")
+                .document(year)
+                .collection(month)
+                .document("category-based-remaining-budget")
+                .collection("Others")
+                .document("remaining-budget-entry");
+
+        budgetRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                DocumentSnapshot document = task.getResult();
+                if (document != null && document.exists()) {
+                    // Retrieve the remaining budget for the category
+                    Double amount = document.getDouble("amount");
+                    if (amount != null) {
+                        // Update categoryTotals with the retrieved amount
+                        categoryTotals.put(category, categoryTotals.getOrDefault(category, 0.0) + amount);
+                        Log.d("FinalCategoryTotals", "Category Totals: " + categoryTotals);
+                        Log.d("CategoryData", "Category: " + category + ", Remaining Budget: ₹" + amount);
+                    } else {
+                        Log.w("CategoryData", "No remaining budget found for category: " + category);
+                    }
+                } else {
+                    Log.d("CategoryData", "No document found for category: " + category);
+                }
+            } else {
+                Log.e("FirestoreError", "Error fetching data for category: " + category, task.getException());
+            }
+        });
     }
 }

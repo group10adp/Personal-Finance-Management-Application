@@ -5,4 +5,7 @@
     <color name="sky">#03A9F4</color>
     <color name="light">#f6fbff</color>
     <color name="purple_200">#042F59</color>
+    <color name="progressBackground">#E0E0E0</color>
+    <color name="progressColor">#4CAF50</color>
+
 </resources>
