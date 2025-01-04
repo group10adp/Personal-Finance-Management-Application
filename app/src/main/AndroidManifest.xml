@@ -13,6 +13,9 @@
         android:theme="@style/Theme.FinanceManager"
         tools:targetApi="31">
         <activity
+            android:name=".PresavingPlanDetails"
+            android:exported="false" />
+        <activity
             android:name=".BudgetDisplayActivity"
             android:exported="false" />
         <activity
@@ -29,9 +32,7 @@
             android:exported="false" />
         <activity
             android:name=".IncomeDetailsActivity"
-            android:exported="false" /> <!-- <meta-data -->
-        <!-- android:name="com.google.android.actions" -->
-        <!-- android:resource="@xml/item_investment" /> -->
+            android:exported="false" />
         <activity
             android:name=".SignUp"
             android:exported="false" />

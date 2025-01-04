@@ -2,7 +2,6 @@ package com.example.financemanager;
 
 import android.os.Bundle;
 import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -10,8 +9,6 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
-import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -37,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
             } else if (id == R.id.nav_analysis) {
                 selectedFragment = new AnalysisFragment();
             } else if (id == R.id.nav_chatbot) {
-                selectedFragment = new ChatbotFragment();
+                selectedFragment = new PresavingplanFragment();
             } else if (id == R.id.nav_investments) {
                 selectedFragment = new InvestmentsFragment();
             }
