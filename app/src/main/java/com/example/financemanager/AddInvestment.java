@@ -129,9 +129,6 @@ public class AddInvestment extends Fragment {
 
                 performApiRequest(fundCode);
 
-                // Display the fund code in a Toast
-                //Toast.makeText(getContext(), "Selected Fund Code: " + fundCode, Toast.LENGTH_SHORT).show();
-
             }
 
             @Override
@@ -226,7 +223,6 @@ public class AddInvestment extends Fragment {
                         String currentPrice = stockInfo.getString("current_price");
                         JSONObject growthRates = stockInfo.getJSONObject("growth_rates");
                         String oneYearGrowthRate = growthRates.getString("1_year");
-
                         // Set the value to EditText
                         editTextReturnRate.setText(oneYearGrowthRate);
                         editTextCurrPrice.setText(currentPrice);
@@ -252,68 +248,27 @@ public class AddInvestment extends Fragment {
         mutualFundMap = new HashMap<>();
         mutualFundMap.put("ICICI Prudential Bluechip Fund", "ICICINIFTY.NS");
         mutualFundMap.put("HDFC Top 100 Fund", "HDFCNIFETF.NS");
-        mutualFundMap.put("UTI Nifty Index Fund", "UTINIFTY50.NS");
-        mutualFundMap.put("SBI Bluechip Fund", "SBINIF50.NS");
         mutualFundMap.put("Axis Bluechip Fund", "AXISNIFTY.NS");
-        mutualFundMap.put("Franklin India Bluechip Fund", "FRANKLININDIA.NS");
-        mutualFundMap.put("Mirae Asset Large Cap Fund", "MIRAEETF.NS");
-        mutualFundMap.put("Kotak Standard Multicap Fund", "KOTAKNIFTY.NS");
-        mutualFundMap.put("Reliance Large Cap Fund", "NIFTYBEES.NS");
-        mutualFundMap.put("Birla Sun Life Frontline Equity Fund", "BIRLANIFTY.NS");
-        mutualFundMap.put("IDFC Nifty Fund", "IDFCNIFTY.NS");
-        mutualFundMap.put("DSP BlackRock Top 100 Equity Fund", "DSPNIFTY100.NS");
-        mutualFundMap.put("HDFC Balanced Advantage Fund", "HDFCBALANCED.NS");
-        mutualFundMap.put("ICICI Prudential Equity & Debt Fund", "ICICIETF.NS");
-        mutualFundMap.put("L&T India Value Fund", "LTVALUEETF.NS");
-        mutualFundMap.put("Kotak Tax Saver Fund", "KOTAKTAXETF.NS");
-        mutualFundMap.put("Tata Equity P/E Fund", "TATAEQUITYETF.NS");
-        mutualFundMap.put("UTI Equity Fund", "UTIEQUITYETF.NS");
+        mutualFundMap.put("Nippon India Mutual Fund", "08GPG.BO");
+        mutualFundMap.put("Kotak Equity Savings Fund", "0P00014HE7.BO");
+        mutualFundMap.put("Reliance Life Pure Equity Fund", "0P0000NPKG.BO");
+        mutualFundMap.put("Aditya Birla Sun Life MNC Fund ", "0P00005V5R.BO");
+        mutualFundMap.put("IDFC Nifty 50 ETF", "IDFNIFTYET.NS");
+        mutualFundMap.put("HDFC Pharma and Healthcare Fund", "0P0001RK6V.BO");
+        mutualFundMap.put("Kotak Low Duration Fund", "0P0000GBDS.BO");
+        mutualFundMap.put("Tata AIA Life-Super Select Equity", "0P0000NQJX.BO");
+        mutualFundMap.put("Tata Multicap Dir IDCW-P", "0P0001QCAT.BO");
+        mutualFundMap.put("Sundaram Select Focus Fund", "0P000162E4");
+        mutualFundMap.put("SBI Small Cap Fund", "0P0001BB9I.BO");
+        mutualFundMap.put("Tata Small Cap Fund", "0P0001EUZV.BO");
+        mutualFundMap.put("Nippon India Short Term Mn IDCW-R", "0P0001BB5M.BO");
+        mutualFundMap.put("NIFTY100 ESG", "NIFTY100_ESG.NS");
+        mutualFundMap.put("Motilal Oswal S&P 500 Index Reg Gr", "0P0001JMZC.BO");
         mutualFundMap.put("Invesco India Growth Fund", "INVESCOETF.NS");
-        mutualFundMap.put("Sundaram Select Focus Fund", "SUNDARAMSELECTETF.NS");
-        mutualFundMap.put("Franklin India Equity Fund", "FRANKLINEQUITYETF.NS");
-        mutualFundMap.put("Mirae Asset Emerging Bluechip Fund", "MIRAEEMERGEBLUEETF.NS");
-        mutualFundMap.put("Canara Robeco Bluechip Equity Fund", "CANARABLUECHIPETF.NS");
-        mutualFundMap.put("Axis Long Term Equity Fund", "AXISLONGETF.NS");
-        mutualFundMap.put("SBI Small Cap Fund", "SBISMALLCAPETF.NS");
-        mutualFundMap.put("HDFC Hybrid Equity Fund", "HDFCHYBRIDETF.NS");
-        mutualFundMap.put("ICICI Prudential Growth Fund", "ICICIGROWETF.NS");
-        mutualFundMap.put("L&T India Growth Fund", "LTINDIAGROWETF.NS");
-        mutualFundMap.put("Birla Sun Life Equity Fund", "BIRLASUNEQUITYETF.NS");
-        mutualFundMap.put("Tata Small Cap Fund", "TATASMALLCAPETF.NS");
-        mutualFundMap.put("DSP BlackRock Equity Fund", "DSPEQUITYETF.NS");
-        mutualFundMap.put("Nippon India Growth Fund", "NIPPONINDIAGROWETF.NS");
-        mutualFundMap.put("Franklin India High Growth Companies Fund", "FRANKLINHIGHGROWTHEETF.NS");
-        mutualFundMap.put("Mirae Asset India Equity Fund", "MIRAEINDIAEQUITYETF.NS");
-        mutualFundMap.put("HDFC Small Cap Fund", "HDFCSMALLCAPETF.NS");
-        mutualFundMap.put("UTI Small Cap Fund", "UTISMALLCAPETF.NS");
-        mutualFundMap.put("ICICI Prudential Nifty Next 50 Index Fund", "ICICINIFTYNEXT50.NS");
-        mutualFundMap.put("Kotak Nifty ETF", "KOTAKNIFTYNEXT50.NS");
-        mutualFundMap.put("Reliance ETF Nifty 50", "RELIANCEETF.NS");
-        mutualFundMap.put("Aditya Birla Sun Life Nifty 50 ETF", "ABSLNIFTY50ETF.NS");
-        mutualFundMap.put("Tata Nifty 50 ETF", "TATANIFTY50ETF.NS");
-        mutualFundMap.put("Franklin India Nifty 50 ETF", "FRANKLININDIAETF.NS");
-        mutualFundMap.put("ICICI Prudential Sensex ETF", "ICICISENSEXETF.NS");
-        mutualFundMap.put("Mirae Asset Nifty 50 ETF", "MIRAEASSETNIFTY50ETF.NS");
-        mutualFundMap.put("HDFC Nifty ETF", "HDFCNIFTYETF.NS");
-        mutualFundMap.put("SBI Nifty ETF", "SBINIFTYETF.NS");
-        mutualFundMap.put("Aditya Birla Sun Life Nifty 50 Index Fund", "BIRLAFNIFTY50ETF.NS");
-        mutualFundMap.put("Axis Nifty 50 ETF", "AXISNIFTY50ETF.NS");
-        mutualFundMap.put("L&T Nifty ETF", "LTNIFTYETF.NS");
-        mutualFundMap.put("Kotak Nifty 50 ETF", "KOTAKNIFTY50ETF.NS");
-        mutualFundMap.put("Nippon India Nifty 50 ETF", "NIPPONINDIANIFTY50ETF.NS");
-        mutualFundMap.put("Canara Robeco Nifty 50 ETF", "CANARANIFTY50ETF.NS");
-        mutualFundMap.put("Sundaram Nifty 50 ETF", "SUNDARANNIFTY50ETF.NS");
-        mutualFundMap.put("Franklin India Nifty 50 Index Fund", "FRANKLININDIANIFTY50ETF.NS");
-        mutualFundMap.put("Mirae Asset Nifty Next 50 ETF", "MIRAEASSETNIFTYNEXT50ETF.NS");
-        mutualFundMap.put("Tata Nifty Next 50 ETF", "TATANIFTYNEXT50ETF.NS");
-        mutualFundMap.put("Aditya Birla Sun Life Nifty Next 50 ETF", "BIRLANIFTYNEXT50ETF.NS");
-        mutualFundMap.put("HDFC Nifty Next 50 ETF", "HDFCNIFTYNEXT50ETF.NS");
-        mutualFundMap.put("Axis Nifty Next 50 ETF", "AXISNIFTYNEXT50ETF.NS");
-        mutualFundMap.put("Reliance Nifty Next 50 ETF", "NIPPONINDIANIFTYNEXT50ETF.NS");
-        mutualFundMap.put("L&T Nifty Next 50 ETF", "LTNIFTYNEXT50ETF.NS");
-        mutualFundMap.put("SBI Nifty Next 50 ETF", "SBINIFTYNEXT50ETF.NS");
-        mutualFundMap.put("Kotak Nifty Next 50 ETF", "KOTAKNIFTYNEXT50ETF.NS");
-        mutualFundMap.put("Franklin India Nifty Next 50 ETF", "FRANKLININDIANIFTYNEXT50ETF.NS");
+        mutualFundMap.put("SBI PSU Dir Gr", "0P0000XVLF.BO");
+        mutualFundMap.put("SBI Long Term Equity Fund Dir Gr", "0P0000XVL9.BO");
+        mutualFundMap.put("Groww Nifty India Defence Etf", "GROWWDEFNC.NS");
+        mutualFundMap.put("UTI Nifty Bank ETF", "UTIBANKETF.NS");
 
         // Add the rest of the items as needed
     }
