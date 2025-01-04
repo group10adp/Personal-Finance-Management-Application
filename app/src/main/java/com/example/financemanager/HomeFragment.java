@@ -71,6 +71,7 @@ public class HomeFragment extends Fragment {
         time_of_day = view.findViewById(R.id.time_of_day);
         time_of_day.setText("Good " + getTimeOfDay());
         TextView seeall =view.findViewById(R.id.tv_see_all);
+        Button manageBudgetButton = view.findViewById(R.id.manageBudgetButton);
 
         profile = view.findViewById(R.id.profile);
         incomeLayout = view.findViewById(R.id.incomeLayout); // Income layout reference
@@ -150,6 +151,11 @@ public class HomeFragment extends Fragment {
         // Set a click listener to open BudgetSetupActivity
         setUpBudgetButton.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), BudgetSetupActivity.class);
+            startActivity(intent);
+        });
+
+        manageBudgetButton.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), ManageBudgetActivity.class);
             startActivity(intent);
         });
 
@@ -261,8 +267,8 @@ public class HomeFragment extends Fragment {
                             });
 
                             // Limit to the top 4 elements after sorting
-                            if (incomeList.size() > 4) {
-                                incomeList.subList(4, incomeList.size()).clear(); // Remove elements beyond the 4th
+                            if (incomeList.size() > 5) {
+                                incomeList.subList(5, incomeList.size()).clear(); // Remove elements beyond the 4th
                             }
 
                             // Notify the adapter that the data has changed

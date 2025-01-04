@@ -2,24 +2,37 @@ package com.example.financemanager;
 
 public class Investment {
     private String mutualFundName;
-    private double returnRate;
-    private double amount;
+    private String returnRate;
+    private String amount;
 
-    public Investment(String mutualFundName, double returnRate, double amount) {
+    private String date;
+    private String time;
+
+    public Investment(String mutualFundName, String returnRate, String amount,String date,String time) {
         this.mutualFundName = mutualFundName;
         this.returnRate = returnRate;
         this.amount = amount;
+        this.date = date;
+        this.time = time;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public String getTime() {
+        return time;
     }
 
     public String getMutualFundName() {
         return mutualFundName;
     }
 
-    public double getReturnRate() {
+    public String getReturnRate() {
         return returnRate;
     }
 
-    public double getAmount() {
+    public String getAmount() {
         return amount;
     }
 }

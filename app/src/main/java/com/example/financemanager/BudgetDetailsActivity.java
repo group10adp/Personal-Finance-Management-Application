@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -12,6 +13,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -32,14 +35,19 @@ public class BudgetDetailsActivity extends AppCompatActivity {
     private DocumentReference totalIncomeRef, totalExpenseRef;
     private double totalIncome = 0.0, totalExpense = 0.0;
 
+    DatabaseReference realtimeDatabase;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_budget_details);
 
+        realtimeDatabase = FirebaseDatabase.getInstance().getReference();
+
         // Get the total budget passed from the previous activity
         Intent intent = getIntent();
         totalBudget = intent.getDoubleExtra("totalBudget", 0);
+        month = intent.getStringExtra("selectedDateValue");
         remainingBudget = totalBudget;
 
         auth = FirebaseAuth.getInstance();
@@ -52,7 +60,7 @@ public class BudgetDetailsActivity extends AppCompatActivity {
         firestore = FirebaseFirestore.getInstance();
 
         year = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
-        month = String.valueOf(Calendar.getInstance().get(Calendar.MONTH)+1);
+        //month = String.valueOf(Calendar.getInstance().get(Calendar.MONTH)+1);
 
 
         totalBudgetTextView.setText("₹" + totalBudget);
@@ -143,33 +151,61 @@ public class BudgetDetailsActivity extends AppCompatActivity {
     private void saveBudgetData() {
         double totalamount = totalBudget;
 
-        firestore.collection("users")
-                .document(userId)
-                .collection("budget")
-                .document(year)
+        totalExpenseRef = firestore.collection("users").document(userId)
+                .collection("expense")
+                .document(String.valueOf(year))
                 .collection(month)
-                .document("total-budget") // Document ID for total budget
-                .set(new TotalBudgetEntry(totalamount))  // TotalBudgetEntry is a custom class to store the total amount
-                .addOnSuccessListener(aVoid -> {
-                    //Toast.makeText(BudgetDetailsActivity.this, "Total budget saved successfully!", Toast.LENGTH_SHORT).show();
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(BudgetDetailsActivity.this, "Failed to save total budget.", Toast.LENGTH_SHORT).show();
-                });
+                .document("totalExpense");
 
-        firestore.collection("users")
-                .document(userId)
-                .collection("budget")
-                .document(year)
-                .collection(month)
-                .document("total-remaining-budget") // Document ID for total budget
-                .set(new TotalBudgetEntry(totalamount))  // TotalBudgetEntry is a custom class to store the total amount
-                .addOnSuccessListener(aVoid -> {
-                    //Toast.makeText(BudgetDetailsActivity.this, "Total budget saved successfully!", Toast.LENGTH_SHORT).show();
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(BudgetDetailsActivity.this, "Failed to save total budget.", Toast.LENGTH_SHORT).show();
-                });
+        totalExpenseRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                DocumentSnapshot documentSnapshot = task.getResult();
+
+                totalExpense = documentSnapshot != null && documentSnapshot.contains("total")
+                        ? documentSnapshot.getDouble("total")
+                        : 0.0;
+
+                    firestore.collection("users")
+                            .document(userId)
+                            .collection("budget")
+                            .document(year)
+                            .collection(month)
+                            .document("total-budget") // Document ID for total budget
+                            .set(new TotalBudgetEntry(totalamount))  // TotalBudgetEntry is a custom class to store the total amount
+                            .addOnSuccessListener(aVoid -> {
+                                //Toast.makeText(BudgetDetailsActivity.this, "Total budget saved successfully!", Toast.LENGTH_SHORT).show();
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(BudgetDetailsActivity.this, "Failed to save total budget.", Toast.LENGTH_SHORT).show();
+                            });
+
+
+                    firestore.collection("users")
+                            .document(userId)
+                            .collection("budget")
+                            .document(year)
+                            .collection(month)
+                            .document("total-remaining-budget") // Document ID for total budget
+                            .set(new TotalBudgetEntry(totalamount-totalExpense))  // TotalBudgetEntry is a custom class to store the total amount
+                            .addOnSuccessListener(aVoid -> {
+                                //Toast.makeText(BudgetDetailsActivity.this, "Total budget saved successfully!", Toast.LENGTH_SHORT).show();
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(BudgetDetailsActivity.this, "Failed to save total budget.", Toast.LENGTH_SHORT).show();
+                            });
+
+                    realtimeDatabase.child("budget").child(month)
+                            .setValue(month)
+                            .addOnSuccessListener(aVoid -> Log.d("RealtimeDB", "Month value saved successfully."))
+                            .addOnFailureListener(e -> Log.e("RealtimeDB", "Failed to save month value.", e));
+
+            } else {
+
+            }
+        });
+
+
+
 
         // Create a BudgetEntry object for each category
         saveCategoryData(categoryInputOthers, "Others");
@@ -187,6 +223,7 @@ public class BudgetDetailsActivity extends AppCompatActivity {
 
         Toast.makeText(BudgetDetailsActivity.this, "Budget details saved successfully!", Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(BudgetDetailsActivity.this, BudgetDisplayActivity.class);
+        intent.putExtra("selectedDateValue", month);
         startActivity(intent);
         finish();
     }
@@ -232,6 +269,27 @@ public class BudgetDetailsActivity extends AppCompatActivity {
 
 
         }
+    }
+
+    private String formatMonthOrYear(String monthYear) {
+        try {
+            int month = Integer.parseInt(monthYear);
+            if (month >= 1 && month <= 12) {
+                return getMonthNameFromNumber(month); // Convert to month name
+            } else {
+                return "Year: " + monthYear; // Format as year
+            }
+        } catch (NumberFormatException e) {
+            return "Invalid: " + monthYear; // Handle unexpected non-numeric keys
+        }
+    }
+
+    private String getMonthNameFromNumber(int month) {
+        String[] months = {
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+        };
+        return "Month: "+months[month - 1];
     }
 }
 

@@ -2,6 +2,7 @@ package com.example.financemanager;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,8 +15,17 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 public class InvestmentsFragment extends Fragment {
@@ -24,11 +34,20 @@ public class InvestmentsFragment extends Fragment {
     private InvestmentAdapter adapter;
     private List<Investment> investmentList;
 
+    private FirebaseFirestore firestore;
+    FirebaseAuth auth;
+    private String userId;
+
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_investments, container, false);
 
         //getActivity().getWindow().setStatusBarColor(Color.parseColor("#121212"));
+
+        auth = FirebaseAuth.getInstance();
+        userId = String.valueOf(auth.getCurrentUser().getUid());
+        firestore = FirebaseFirestore.getInstance();
 
         // Initialize RecyclerView
         recyclerView = view.findViewById(R.id.recycler_view_investments);
@@ -40,7 +59,12 @@ public class InvestmentsFragment extends Fragment {
         recyclerView.setAdapter(adapter);
 
         // Handle arguments passed from AddInvestment
-        checkForNewInvestment();
+        //checkForNewInvestment();
+
+        String year = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
+        String month = String.valueOf(Calendar.getInstance().get(Calendar.MONTH)+1);
+
+        fetchIncomeData(year, month);
 
         // FloatingActionButton to add new investment
         FloatingActionButton fabAdd = view.findViewById(R.id.fab_add);
@@ -54,31 +78,87 @@ public class InvestmentsFragment extends Fragment {
         return view;
     }
 
-    /**
-     * Check for new investment details passed via arguments and add to the list.
-     */
-    private void checkForNewInvestment() {
-        Bundle args = getArguments();
-        if (args != null) {
-            String mutualFund = args.getString("mutualFund");
-            String returnRate = args.getString("returnRate");
-            String amount = args.getString("amount");
+    private void fetchIncomeData(String year, String month) {
+        firestore.collection("users")
+                .document(userId)
+                .collection("investment")
+                .document(year)
+                .collection(month)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        investmentList.clear(); // Clear any existing data
 
-            if (mutualFund != null && returnRate != null && amount != null) {
-                try {
-                    double returnRateValue = Double.parseDouble(returnRate);
-                    double amountValue = Double.parseDouble(amount);
+                        QuerySnapshot querySnapshot = task.getResult();
+                        if (querySnapshot != null) {
+                            // SimpleDateFormat to parse and compare dates and times
+                            SimpleDateFormat formatter = new SimpleDateFormat("dd MMM yyyy hh:mm a");
 
-                    Investment newInvestment = new Investment(mutualFund, returnRateValue, amountValue);
-                    investmentList.add(newInvestment);
+                            for (QueryDocumentSnapshot document : querySnapshot) {
+                                // Check if the document ID is "totalIncome" and skip it
 
-                    // Notify adapter about new data
-                    adapter.notifyItemInserted(investmentList.size() - 1);
-                } catch (NumberFormatException e) {
-                    // Handle invalid number format gracefully
-                    e.printStackTrace();
-                }
-            }
-        }
+                                // Safely retrieve 'amount' as Double
+                                Double amount = document.getDouble("amount");
+                                if (amount == null) {
+                                    amount = 0.0; // Assign default value if 'amount' is null
+                                }
+
+                                // Convert amount (Double) to String
+                                String amountString = String.valueOf(amount);
+
+                                // Get 'category', 'date', and 'time' safely
+
+                                String mutualFund = document.getString("mutualFund");
+                                if (mutualFund == null) {
+                                    mutualFund = "Others"; // Default date for invalid entries
+                                }
+
+                                String returnRate = document.getString("returnRate");
+                                if (returnRate == null) {
+                                    returnRate = "0"; // Default time for invalid entries
+                                }
+
+                                String date = document.getString("date");
+                                if (date == null) {
+                                    date = "01 Jan 1970"; // Default date for invalid entries
+                                }
+
+                                String time = document.getString("time");
+                                if (time == null) {
+                                    time = "12:00 AM"; // Default time for invalid entries
+                                }
+
+                                // Create a new IncomeModel object and add it to the list
+                                investmentList.add(new Investment(mutualFund,returnRate,amountString,date,time));
+                            }
+
+                            // Sort the list based on date and time in descending order
+                            Collections.sort(investmentList, (o1, o2) -> {
+                                try {
+                                    String dateTime1 = o1.getDate() + " " + o1.getTime();
+                                    String dateTime2 = o2.getDate() + " " + o2.getTime();
+
+                                    Date date1 = formatter.parse(dateTime1);
+                                    Date date2 = formatter.parse(dateTime2);
+
+                                    return date2.compareTo(date1); // Descending order
+                                } catch (ParseException e) {
+                                    Log.e("IncomeAdapter", "Error parsing date/time", e);
+                                    return 0; // Keep order if parsing fails
+                                }
+                            });
+
+                            //Log.d("IncomeAdapter", "Sorted Income List: " + incomeList);
+
+                            // Notify the adapter that the data has changed
+                            adapter.notifyDataSetChanged();
+                        }
+
+                    } else {
+                        // Handle any errors
+                        System.out.println("Error getting documents: " + task.getException());
+                    }
+                });
     }
+
 }

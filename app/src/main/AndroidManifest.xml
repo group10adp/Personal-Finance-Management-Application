@@ -16,6 +16,9 @@
             android:name=".PresavingPlanDetails"
             android:exported="false" />
         <activity
+            android:name=".ManageBudgetActivity"
+            android:exported="false" />
+        <activity
             android:name=".BudgetDisplayActivity"
             android:exported="false" />
         <activity

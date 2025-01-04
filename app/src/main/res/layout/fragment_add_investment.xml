@@ -28,66 +28,66 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="100dp"
         android:orientation="vertical">
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="80dp"
-        android:gravity="center_horizontal"
-        android:orientation="horizontal">
-
-        <!-- Date Section -->
         <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="10dp">
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
 
-            <ImageView
-                android:id="@+id/dateIcon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:contentDescription="Date Icon"
-                android:src="@drawable/baseline_calendar_month_24" />
-
-            <TextView
-                android:id="@+id/dateText"
+            <!-- Date Section -->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="13 Nov 2024"
-                android:textColor="@android:color/black"
-                android:textSize="16sp" />
-        </LinearLayout>
+                android:orientation="horizontal"
+                android:padding="10dp">
 
-        <!-- Spacer -->
-        <View
-            android:layout_width="32dp"
-            android:layout_height="wrap_content" />
+                <ImageView
+                    android:id="@+id/dateIcon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:contentDescription="Date Icon"
+                    android:src="@drawable/baseline_calendar_month_24" />
 
-        <!-- Time Section -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginLeft="50dp"
-            android:padding="10dp">
+                <TextView
+                    android:id="@+id/dateText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="13 Nov 2024"
+                    android:textColor="@android:color/black"
+                    android:textSize="16sp" />
+            </LinearLayout>
 
-            <ImageView
-                android:id="@+id/timeIcon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/baseline_access_time_24"
-                android:contentDescription="Time Icon" />
+            <!-- Spacer -->
+            <View
+                android:layout_width="32dp"
+                android:layout_height="wrap_content" />
 
-            <TextView
-                android:id="@+id/timeText"
+            <!-- Time Section -->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="10:36 PM"
-                android:textColor="@android:color/black"
-                android:textSize="16sp" />
+                android:orientation="horizontal"
+                android:layout_marginLeft="50dp"
+                android:padding="10dp">
+
+                <ImageView
+                    android:id="@+id/timeIcon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/baseline_access_time_24"
+                    android:contentDescription="Time Icon" />
+
+                <TextView
+                    android:id="@+id/timeText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="10:36 PM"
+                    android:textColor="@android:color/black"
+                    android:textSize="16sp" />
+            </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
     </LinearLayout>
 
     <LinearLayout
@@ -109,6 +109,23 @@
             android:id="@+id/spinner_mutual_fund"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" />
+
+        <!-- New Current Price Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Current Price"
+            android:textSize="16sp"
+            android:layout_marginTop="20dp"
+            android:layout_marginLeft="4dp" />
+
+        <EditText
+            android:id="@+id/edittext_current_price"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Current Price"
+            android:inputType="numberDecimal"
             android:layout_marginTop="8dp" />
 
         <TextView

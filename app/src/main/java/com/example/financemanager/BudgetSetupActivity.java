@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -24,6 +25,7 @@ public class BudgetSetupActivity extends AppCompatActivity {
     private Button nextButton;
     private Calendar calendar;
     private boolean isYearlySelected = false; // Default to Monthly
+    private String selectedDateValue; // Stores the selected month/year value
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,27 +77,27 @@ public class BudgetSetupActivity extends AppCompatActivity {
         });
 
         // Set an OnClickListener for the "Next" button
-        // Set an OnClickListener for the "Next" button
         nextButton.setOnClickListener(v -> {
             // Get the total budget amount entered by the user
             String budgetLimit = budgetLimitInput.getText().toString().trim();
 
             // Check if the input is valid
             if (!budgetLimit.isEmpty()) {
-                // Convert the input to a number (for example, an integer or double)
+                // Convert the input to a number
                 double totalBudget = Double.parseDouble(budgetLimit);
 
                 // Create an intent to go to the next activity
                 Intent intent = new Intent(BudgetSetupActivity.this, BudgetDetailsActivity.class);
 
-                // Pass the total budget amount to the next activity
+                // Pass the total budget amount and selected date value to the next activity
                 intent.putExtra("totalBudget", totalBudget);
+                intent.putExtra("selectedDateValue", selectedDateValue);
+                //Log.d("Selected23",""+selectedDateValue);
 
                 // Start the next activity
                 startActivity(intent);
             }
         });
-
     }
 
     // Sets up the behavior for the toggle buttons
@@ -129,8 +131,11 @@ public class BudgetSetupActivity extends AppCompatActivity {
         SimpleDateFormat dateFormat;
         if (isYearlySelected) {
             dateFormat = new SimpleDateFormat("yyyy", Locale.getDefault());
+            selectedDateValue = String.valueOf(calendar.get(Calendar.YEAR));
         } else {
+            selectedDateValue = String.valueOf(calendar.get(Calendar.MONTH) + 1);
             dateFormat = new SimpleDateFormat("MMMM yyyy", Locale.getDefault());
+            selectedMonthYear.setText(dateFormat.format(calendar.getTime()));
         }
         selectedMonthYear.setText(dateFormat.format(calendar.getTime()));
     }

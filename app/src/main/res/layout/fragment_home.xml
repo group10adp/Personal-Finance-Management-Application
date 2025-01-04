@@ -217,6 +217,7 @@
 
         <!-- New Card Section -->
         <LinearLayout
+            android:id="@+id/budgetCreate"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -224,8 +225,6 @@
             android:padding="16dp"
             android:layout_marginBottom="120dp"
             android:layout_marginTop="16dp">
-
-
 
             <TextView
                 android:layout_width="wrap_content"
@@ -243,20 +242,41 @@
                 android:textSize="16sp"
                 android:textColor="#6F6E6E" />
 
-            <Button
-                android:id="@+id/setUpBudgetButton"
+            <!-- Button Section -->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Set Up Budget"
-                android:textColor="@android:color/white"
-                android:backgroundTint="@android:color/black"
-                android:layout_marginTop="12dp"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
-                android:paddingLeft="18dp"
-                android:paddingRight="18dp" />
+                android:orientation="horizontal"
+                android:layout_marginTop="12dp">
+
+                <Button
+                    android:id="@+id/setUpBudgetButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Set Up Budget"
+                    android:textColor="@android:color/white"
+                    android:backgroundTint="@android:color/black"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp"
+                    android:paddingLeft="18dp"
+                    android:paddingRight="18dp"
+                    android:layout_marginRight="8dp" />
+
+                <Button
+                    android:id="@+id/manageBudgetButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Manage Budget"
+                    android:textColor="@android:color/white"
+                    android:backgroundTint="@android:color/black"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp"
+                    android:paddingLeft="18dp"
+                    android:paddingRight="18dp" />
+            </LinearLayout>
 
         </LinearLayout>
+
 
     </LinearLayout>
 </ScrollView>

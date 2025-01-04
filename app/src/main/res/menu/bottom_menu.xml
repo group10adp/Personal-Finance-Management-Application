@@ -22,7 +22,7 @@
 
     <item
         android:id="@+id/nav_chatbot"
-        android:title="Pre-savingPlan"
+        android:title="Pre saving"
         android:icon="@drawable/baseline_chatbot_24"/>
 
 

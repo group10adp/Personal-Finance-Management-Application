@@ -71,4 +71,10 @@ dependencies {
     debugImplementation(libs.ui.tooling)
     debugImplementation(libs.ui.test.manifest)
     implementation("com.github.lzyzsd:circleprogress:1.2.1")
+    implementation("com.google.android.material:material:1.9.0")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.google.firebase:firebase-database:20.2.2")
+
+
 }

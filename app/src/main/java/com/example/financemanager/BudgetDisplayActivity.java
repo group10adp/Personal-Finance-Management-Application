@@ -2,6 +2,7 @@ package com.example.financemanager;
 
 import static java.security.AccessController.getContext;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
@@ -41,11 +42,12 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class BudgetDisplayActivity extends AppCompatActivity {
 
     private FirebaseFirestore firestore;
-    private TextView budgetTextView, remainingTextView,spentTextView;
+    private TextView budgetTextView, remainingTextView, spentTextView, monthYear,tv_remark;
     String userId, year, month;
     FirebaseAuth auth;
     private DonutProgress donutProgress;
@@ -60,10 +62,13 @@ public class BudgetDisplayActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_budget_display);
 
+        Intent intent = getIntent();
+        month = intent.getStringExtra("selectedDateValue");
+
         auth = FirebaseAuth.getInstance();
         userId = String.valueOf(auth.getCurrentUser().getUid());
         year = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
-        month = String.valueOf(Calendar.getInstance().get(Calendar.MONTH)+1);
+//        month = String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1);
 
         pieChart = findViewById(R.id.pieChart);
         barChart = findViewById(R.id.barChart);
@@ -73,34 +78,43 @@ public class BudgetDisplayActivity extends AppCompatActivity {
         remainingTextView = findViewById(R.id.tv_available_budget);
         spentTextView = findViewById(R.id.tv_total_spent);
         donutProgress = findViewById(R.id.donutProgress);
+        monthYear = findViewById(R.id.tv_month_year);
+        tv_remark=findViewById(R.id.tv_remark);
 
-        totalIncomeRef = firestore.collection("users").document(userId)
-                .collection("income")
-                .document(String.valueOf(year))
-                .collection(String.valueOf(month))
-                .document("totalIncome");
+        if(year.equals(month)){
+            totalIncomeRef = firestore.collection("users").document(userId)
+                    .collection("income")
+                    .document(String.valueOf(year))
+                    .collection(String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1))
+                    .document("totalIncome");
 
-        totalExpenseRef = firestore.collection("users").document(userId)
-                .collection("expense")
-                .document(String.valueOf(year))
-                .collection(String.valueOf(month))
-                .document("totalExpense");
+            totalExpenseRef = firestore.collection("users").document(userId)
+                    .collection("expense")
+                    .document(String.valueOf(year))
+                    .collection(String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1))
+                    .document("totalExpense");
+        }
+        else{
+            totalIncomeRef = firestore.collection("users").document(userId)
+                    .collection("income")
+                    .document(String.valueOf(year))
+                    .collection(String.valueOf(month))
+                    .document("totalIncome");
+
+            totalExpenseRef = firestore.collection("users").document(userId)
+                    .collection("expense")
+                    .document(String.valueOf(year))
+                    .collection(String.valueOf(month))
+                    .document("totalExpense");
+        }
 
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
-
-        // Replace these with actual values
-
-        fetchBudgetDetails(userId, year, month);
+        fetchBudgetDetails(userId, year);
         fetchTotalExpenseIncome();
 
         ArrayList<PieEntry> pieEntries = new ArrayList<>();
-        pieEntries.add(new PieEntry((float)50));
-        pieEntries.add(new PieEntry((float)50));
+        pieEntries.add(new PieEntry((float) 50));
+        pieEntries.add(new PieEntry((float) 50));
 
         // Customize dataset
         PieDataSet dataSet = new PieDataSet(pieEntries, "");
@@ -176,7 +190,8 @@ public class BudgetDisplayActivity extends AppCompatActivity {
 
     }
 
-    private void fetchBudgetDetails(String userId, String year, String month) {
+    private void fetchBudgetDetails(String userId, String year) {
+
         // Fetch total budget
         firestore.collection("users")
                 .document(userId)
@@ -186,8 +201,8 @@ public class BudgetDisplayActivity extends AppCompatActivity {
                 .document("total-budget")
                 .get()
                 .addOnSuccessListener(totalBudgetSnapshot -> {
-                    if (totalBudgetSnapshot.exists()) {
                         double totalBudget = totalBudgetSnapshot.getDouble("amount");
+
 
                         // Fetch remaining budget
                         firestore.collection("users")
@@ -203,26 +218,62 @@ public class BudgetDisplayActivity extends AppCompatActivity {
 
                                         // Calculate the percentage
                                         double percentageRemaining = (remainingBudget / totalBudget) * 100;
-                                        percentageRemaining=100-percentageRemaining;
+                                        percentageRemaining = 100 - percentageRemaining;
                                         String formattedPercentage = String.format("%.1f%%", percentageRemaining);
                                         donutProgress.setStartingDegree(270);
                                         donutProgress.setProgress((float) percentageRemaining);
                                         donutProgress.setText(formattedPercentage);
+
+                                        String message;
+
+                                        if (percentageRemaining > 100) {
+                                            message = "Alert! You've reached your budget limit.";
+                                            tv_remark.setText(message);
+                                            tv_remark.setTextColor(Color.parseColor("#FF0000")); // Red color for alert (hex code)
+                                        } else if (percentageRemaining > 50) {
+                                            message = "At this rate, you may exceed your budget soon.";
+                                            tv_remark.setText(message);
+                                            tv_remark.setTextColor(Color.parseColor("#FFA500")); // Orange color for warning (hex code)
+                                        } else {
+                                            message = "Great job! You are under your budget.";
+                                            tv_remark.setText(message);
+                                            tv_remark.setTextColor(Color.parseColor("#4CAF50")); // Green color for good progress (hex code)
+                                        }
+
+
+
                                         // Update UI
-                                        budgetTextView.setText(String.format("Budget: ₹"+totalBudget));
-                                        remainingTextView.setText(String.format(String.valueOf(remainingBudget)));
-                                        //percentageTextView.setText(String.format("Remaining Percentage: %.2f%%", percentageRemaining));
+
+                                        budgetTextView.setText(String.format("Budget: ₹%s", totalBudget));
+                                        remainingTextView.setText(String.valueOf(remainingBudget));
+
+                                        // Retrieve and display month and year
+                                        String monthYearText = formatMonthYear(Integer.parseInt(month), Integer.parseInt(year));
+                                        monthYear.setText(monthYearText);
                                     } else {
                                         Toast.makeText(this, "Remaining budget not found!", Toast.LENGTH_SHORT).show();
                                     }
                                 })
                                 .addOnFailureListener(e -> Toast.makeText(this, "Failed to fetch remaining budget.", Toast.LENGTH_SHORT).show());
-                    } else {
-                        Toast.makeText(this, "Total budget not found!", Toast.LENGTH_SHORT).show();
-                    }
                 })
                 .addOnFailureListener(e -> Toast.makeText(this, "Failed to fetch total budget.", Toast.LENGTH_SHORT).show());
     }
+
+    // Utility method to format the month and year
+    private String formatMonthYear(int month, int year) {
+        String[] monthNames = {
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+        };
+        try{
+            return monthNames[month - 1] + " " + year;
+        }
+        catch (Exception e){
+            return year+"";
+        }
+
+    }
+
 
 
     private void fetchTotalExpenseIncome() {
@@ -270,45 +321,27 @@ public class BudgetDisplayActivity extends AppCompatActivity {
                     // HashMap to store the total income by category
                     Map<String, Double> categoryTotals = new HashMap<>();
 
+                    // Categories to process
+                    String[] categories = {
+                            "Others", "Transport", "Shopping", "Entertainment", "Health", "Education",
+                            "Bill", "Investment", "Rent", "Tax", "Insurance", "Money Transfer"
+                    };
 
+                    // Atomic counter to track the number of processed categories
+                    AtomicInteger counter = new AtomicInteger(0);
 
-                    // Define a helper function to fetch and update data for a single category
-                    fetchCategoryData(userId, year, month, "Others", categoryTotals);
-                    fetchCategoryData(userId, year, month, "Transport", categoryTotals);
-                    fetchCategoryData(userId, year, month, "Shopping", categoryTotals);
-                    fetchCategoryData(userId, year, month, "Entertainment", categoryTotals);
-                    fetchCategoryData(userId, year, month,"Health", categoryTotals);
-                    fetchCategoryData(userId, year, month,"Education", categoryTotals);
-                    fetchCategoryData(userId, year, month,"Bill", categoryTotals);
-                    fetchCategoryData(userId, year, month, "Investment", categoryTotals);
-                    fetchCategoryData(userId, year, month,"Rent", categoryTotals);
-                    fetchCategoryData(userId, year, month, "Tax", categoryTotals);
-                    fetchCategoryData(userId, year, month, "Insurance", categoryTotals);
-                    fetchCategoryData(userId, year, month, "Money Transfer", categoryTotals);
-
-//
-//
-//                    Log.d("FinalCategoryTotals", "Category Totals: " + categoryTotals);
-
-
-
-//                    categoryTotals.put("Others", 576.0);
-//                    categoryTotals.put("Entertainment", 565.0);
-//                    categoryTotals.put("Health", 156.0);
-//                    categoryTotals.put("Education", 256.0);
-//                    categoryTotals.put("Insurance", 356.0);
-//                    categoryTotals.put("Money Transfer", 556.0);
-//                    categoryTotals.put("Bill", 356.0);
-//                    categoryTotals.put("Shopping", 596.0);
-//                    categoryTotals.put("Tax", 5656.0);
-//                    categoryTotals.put("Transport", 56.0);
-//                    categoryTotals.put("Investment", 6556.0);
-//                    categoryTotals.put("Rent", 856.0);
-
-                    Log.d("FinalCategoryTotals", "Category Totals: " + categoryTotals);
-                    // Update the UI (e.g., pie chart or other views)
-                    updateCategoryPieChart(categoryTotals);
-                    updateBarChart(barChart,categoryTotals);
+                    for (String category : categories) {
+                        fetchCategoryData(userId, year, month, category, categoryTotals, () -> {
+                            // Increment the counter and check if all categories are processed
+                            if (counter.incrementAndGet() == categories.length) {
+                                // All categories processed
+                                Log.d("FinalCategoryTotals", "Category Totals: " + categoryTotals);
+                                // Update the UI
+                                updateCategoryPieChart(categoryTotals);
+                                updateBarChart(barChart, categoryTotals);
+                            }
+                        });
+                    }
                 } else {
                     Log.d("CategoryTotals", "No income data found for categories.");
                 }
@@ -317,6 +350,46 @@ public class BudgetDisplayActivity extends AppCompatActivity {
             }
         });
     }
+
+    // Modified fetchCategoryData with a callback
+    private void fetchCategoryData(String userId, String year, String month, String category,
+                                   Map<String, Double> categoryTotals, Runnable onComplete) {
+        // Use the category name to dynamically reference the document
+        DocumentReference budgetRef = firestore.collection("users")
+                .document(userId)
+                .collection("budget")
+                .document(year)
+                .collection(month)
+                .document("category-based-remaining-budget")
+                .collection(category)  // Use the category dynamically
+                .document("remaining-budget-entry");
+
+        budgetRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                DocumentSnapshot document = task.getResult();
+                if (document != null && document.exists()) {
+                    // Retrieve the remaining budget for the category
+                    Double amount = document.getDouble("amount");
+                    if (amount != null) {
+                        synchronized (categoryTotals) {
+                            categoryTotals.put(category, categoryTotals.getOrDefault(category, 0.0) + amount);
+                        }
+                        Log.d("CategoryData", "Category: " + category + ", Remaining Budget: ₹" + amount);
+                    } else {
+                        Log.w("CategoryData", "No remaining budget found for category: " + category);
+                    }
+                } else {
+                    Log.d("CategoryData", "No document found for category: " + category);
+                }
+            } else {
+                Log.e("FirestoreError", "Error fetching data for category: " + category, task.getException());
+            }
+            // Trigger the completion callback
+            onComplete.run();
+        });
+    }
+
+
 
     private void updateCategoryPieChart(Map<String, Double> categoryTotals) {
         ArrayList<PieEntry> pieEntries = new ArrayList<>();
@@ -344,7 +417,7 @@ public class BudgetDisplayActivity extends AppCompatActivity {
             pieEntries.add(new PieEntry(entry.getValue().floatValue(), entry.getKey()));
 
             // Add legend item
-            legendItems.add(new LegendItem(entry.getKey(), colors[colorIndex % colors.length],valueAsString));
+            legendItems.add(new LegendItem(entry.getKey(), colors[colorIndex % colors.length], valueAsString));
             colorIndex++;
         }
 
@@ -370,7 +443,6 @@ public class BudgetDisplayActivity extends AppCompatActivity {
     }
 
 
-
     private void updateBarChart(BarChart barChart, Map<String, Double> categoryIncome) {
         if (categoryIncome == null || categoryIncome.isEmpty()) {
             // Avoid rendering an empty chart
@@ -379,6 +451,7 @@ public class BudgetDisplayActivity extends AppCompatActivity {
 
         ArrayList<BarEntry> entries = new ArrayList<>();
         ArrayList<String> categoryLabels = new ArrayList<>();
+
 
         int colorIndex = 0;
         for (Map.Entry<String, Double> entry : categoryIncome.entrySet()) {
@@ -391,6 +464,10 @@ public class BudgetDisplayActivity extends AppCompatActivity {
             categoryLabels.add(entry.getKey());
             colorIndex++;
         }
+
+
+
+
 
         // Bar chart dataset
         BarDataSet barDataSet = new BarDataSet(entries, "Category-wise Income");
@@ -405,7 +482,7 @@ public class BudgetDisplayActivity extends AppCompatActivity {
         barDataSet.setValueTextSize(12f);
 
         BarData barData = new BarData(barDataSet);
-        barData.setBarWidth(0.4f); // Bar width
+        barData.setBarWidth(0.3f); // Bar width
 
         // Configure the BarChart
         barChart.setData(barData);
@@ -415,7 +492,9 @@ public class BudgetDisplayActivity extends AppCompatActivity {
 
         // Customize X-axis
         XAxis xAxis = barChart.getXAxis();
-        xAxis.setGranularity(1f);
+        xAxis.setGranularity(1f); // Ensure each label corresponds to an entry
+        xAxis.setGranularityEnabled(true); // Enforce granularity
+        xAxis.setLabelCount(categoryLabels.size(), true); // Show all labels
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setDrawGridLines(false); // Hide vertical grid lines
         xAxis.setValueFormatter(new ValueFormatter() {
@@ -423,13 +502,15 @@ public class BudgetDisplayActivity extends AppCompatActivity {
             public String getFormattedValue(float value) {
                 int index = (int) value;
                 if (index >= 0 && index < categoryLabels.size()) {
-                    return categoryLabels.get(index); // Show category name
+
+                    Log.d("halleluia",""+index);
+                    return categoryLabels.get(index);
                 }
                 return "";
             }
         });
-        xAxis.setLabelRotationAngle(-55f);
-        barChart.setExtraBottomOffset(50f);
+        xAxis.setLabelRotationAngle(-90f); // Rotate labels for better visibility
+        barChart.setExtraBottomOffset(50f); // Ensure labels aren't cut off
 
         // Customize Y-axis
         YAxis leftAxis = barChart.getAxisLeft();
@@ -443,36 +524,6 @@ public class BudgetDisplayActivity extends AppCompatActivity {
         barChart.invalidate();
     }
 
-    private void fetchCategoryData(String userId, String year, String month, String category, Map<String, Double> categoryTotals) {
-        DocumentReference budgetRef = firestore.collection("users")
-                .document(userId)
-                .collection("budget")
-                .document(year)
-                .collection(month)
-                .document("category-based-remaining-budget")
-                .collection("Others")
-                .document("remaining-budget-entry");
-
-        budgetRef.get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                DocumentSnapshot document = task.getResult();
-                if (document != null && document.exists()) {
-                    // Retrieve the remaining budget for the category
-                    Double amount = document.getDouble("amount");
-                    if (amount != null) {
-                        // Update categoryTotals with the retrieved amount
-                        categoryTotals.put(category, categoryTotals.getOrDefault(category, 0.0) + amount);
-                        Log.d("FinalCategoryTotals", "Category Totals: " + categoryTotals);
-                        Log.d("CategoryData", "Category: " + category + ", Remaining Budget: ₹" + amount);
-                    } else {
-                        Log.w("CategoryData", "No remaining budget found for category: " + category);
-                    }
-                } else {
-                    Log.d("CategoryData", "No document found for category: " + category);
-                }
-            } else {
-                Log.e("FirestoreError", "Error fetching data for category: " + category, task.getException());
-            }
-        });
-    }
 }
+
+

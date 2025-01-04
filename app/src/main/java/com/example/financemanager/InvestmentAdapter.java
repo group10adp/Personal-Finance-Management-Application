@@ -29,8 +29,8 @@ public class InvestmentAdapter extends RecyclerView.Adapter<InvestmentAdapter.In
     public void onBindViewHolder(@NonNull InvestmentViewHolder holder, int position) {
         Investment investment = investments.get(position);
         holder.mutualFundName.setText(investment.getMutualFundName());
-        holder.returnRate.setText(String.format("Return Rate: %.2f%%", investment.getReturnRate()));
-        holder.amount.setText(String.format("Amount: ₹%.2f", investment.getAmount()));
+        holder.returnRate.setText("Return Rate: "+investment.getReturnRate()+"%");
+        holder.amount.setText("Amount: ₹"+investment.getAmount());
     }
 
     @Override

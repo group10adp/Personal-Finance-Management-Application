@@ -8,6 +8,7 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -21,20 +22,31 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import org.json.JSONObject;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class AddInvestment extends Fragment {
 
     private Spinner spinnerMutualFund;
-    private EditText editTextReturnRate, editTextAmount;
+    private EditText editTextReturnRate, editTextAmount,editTextCurrPrice;
     private Button submitButton;
 
     private TextView dateText;
@@ -42,9 +54,12 @@ public class AddInvestment extends Fragment {
 
     private FirebaseFirestore firestore;
 
-    FirebaseAuth auth;
+    private FirebaseAuth auth;
 
     private String userId;
+    private Map<String, String> mutualFundMap;
+
+    // Setup Retrofit
 
     public AddInvestment() {
         // Required empty public constructor
@@ -70,17 +85,19 @@ public class AddInvestment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_add_investment, container, false);
 
         // Initialize views
-
         auth = FirebaseAuth.getInstance();
-        userId = String.valueOf(auth.getCurrentUser().getUid());
+        userId = auth.getCurrentUser().getUid();
         spinnerMutualFund = view.findViewById(R.id.spinner_mutual_fund);
         editTextReturnRate = view.findViewById(R.id.edittext_return_rate);
         editTextAmount = view.findViewById(R.id.edittext_amount);
+        editTextCurrPrice=view.findViewById(R.id.edittext_current_price);
         submitButton = view.findViewById(R.id.submit_button);
         dateText = view.findViewById(R.id.dateText);
         timeText = view.findViewById(R.id.timeText);
         ImageView dateIcon = view.findViewById(R.id.dateIcon);
         ImageView timeIcon = view.findViewById(R.id.timeIcon);
+
+        firestore = FirebaseFirestore.getInstance();
 
         dateText.setText(getCurrentDate());
         timeText.setText(getCurrentTime());
@@ -90,24 +107,44 @@ public class AddInvestment extends Fragment {
         timeIcon.setOnClickListener(v -> showTimePicker());
         timeText.setOnClickListener(v -> showTimePicker());
 
-        firestore = FirebaseFirestore.getInstance();
+        // Initialize mutual fund map
+        initializeMutualFundMap();
 
-        // Populate Spinner with mutual funds
-        String[] mutualFunds = {
-                "SBI Mutual Fund",
-                "HDFC Mutual Fund",
-                "ICICI Prudential Mutual Fund",
-                "Aditya Birla Sun Life Mutual Fund",
-                "Axis Mutual Fund"
-        };
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, mutualFunds);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                getContext(),
+                android.R.layout.simple_spinner_item,
+                new ArrayList<>(mutualFundMap.keySet())
+        );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerMutualFund.setAdapter(adapter);
+
+        spinnerMutualFund.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                // Get the selected mutual fund name
+                String selectedFund = parent.getItemAtPosition(position).toString();
+
+                // Retrieve the corresponding fund code
+                String fundCode = mutualFundMap.get(selectedFund);
+
+                performApiRequest(fundCode);
+
+                // Display the fund code in a Toast
+                //Toast.makeText(getContext(), "Selected Fund Code: " + fundCode, Toast.LENGTH_SHORT).show();
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Optional: Handle the case when nothing is selected (if needed)
+            }
+        });
 
         // TextWatcher to enable Save button only if all fields are filled
         TextWatcher textWatcher = new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -115,7 +152,8 @@ public class AddInvestment extends Fragment {
             }
 
             @Override
-            public void afterTextChanged(Editable s) {}
+            public void afterTextChanged(Editable s) {
+            }
         };
 
         editTextReturnRate.addTextChangedListener(textWatcher);
@@ -124,6 +162,7 @@ public class AddInvestment extends Fragment {
         // Handle Save button click
         submitButton.setOnClickListener(v -> {
             String mutualFund = spinnerMutualFund.getSelectedItem().toString();
+            String fundCode = mutualFundMap.get(mutualFund); // Retrieve fund code
             String returnRate = editTextReturnRate.getText().toString();
             String amountStr = editTextAmount.getText().toString();
             String date = dateText.getText().toString().trim();
@@ -133,66 +172,153 @@ public class AddInvestment extends Fragment {
                 double amount = Double.parseDouble(amountStr);
 
                 // Get current year and month
-                //String[] dateParts = date.split(" ");
-                //String year = dateParts[2];
                 String[] dateParts = date.split(" ");
                 String year = dateParts[2];
                 String month = String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1); // Get the current month in MM format
-                //String month = String.format("%02d", Calendar.getInstance().get(Calendar.MONTH) + 1); // Get the current month in MM format
 
-                // Create an ExpenseEntry object
-                AddInvestment.InvestmentEntry expenseEntry = new AddInvestment.InvestmentEntry(mutualFund,returnRate,amount, date, time);
+                // Create an InvestmentEntry object
+                InvestmentEntry investmentEntry = new InvestmentEntry(mutualFund, fundCode, returnRate, amount, date, time);
 
-
-                // Save expense entry to Firestore
+                // Save investment entry to Firestore
                 firestore.collection("users").document(userId)
                         .collection("investment")
                         .document(year)
                         .collection(month)
-                        .add(expenseEntry)
+                        .add(investmentEntry)
                         .addOnSuccessListener(documentReference -> {
-                            // Update total expense for the user
-                            //updateTotalExpense(year, month, amount);
+                            Toast.makeText(getContext(), "Investment saved successfully!", Toast.LENGTH_SHORT).show();
                         })
-                        .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save expense entry.", Toast.LENGTH_SHORT).show());
-
-                ExpenseFragment.ExpenseEntry expenseEntry1 = new ExpenseFragment.ExpenseEntry(amount, date, time, "Investment", "Online","Invested on mutual funds");
-
-                // Save expense entry to Firestore
-                firestore.collection("users").document(userId)
-                        .collection("expense")
-                        .document(year)
-                        .collection(month)
-                        .add(expenseEntry1)
-                        .addOnSuccessListener(documentReference -> {
-                            // Update total expense for the user
-                            updateTotalExpense(year, month, amount);
-                        })
-                        .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save expense entry.", Toast.LENGTH_SHORT).show());
-
+                        .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save investment.", Toast.LENGTH_SHORT).show());
             } else {
                 Toast.makeText(getContext(), "Please enter an amount.", Toast.LENGTH_SHORT).show();
             }
-
-            // Pass data back to InvestmentsFragment
-            Bundle bundle = new Bundle();
-            bundle.putString("mutualFund", mutualFund);
-            bundle.putString("returnRate", returnRate);
-            bundle.putString("amount", amountStr);
-
-            InvestmentsFragment investmentsFragment = new InvestmentsFragment();
-            investmentsFragment.setArguments(bundle);
-
-            FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
-            transaction.replace(R.id.fragment_container, investmentsFragment);
-            transaction.addToBackStack(null);
-            transaction.commit();
         });
 
         return view;
     }
 
-    // Enable Save button only when all fields have valid input
+    private void performApiRequest(String fundCode) {
+        // Trim the fundCode to remove leading and trailing spaces
+        fundCode = fundCode.trim();
+
+        // Setup Retrofit
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://stockviewer-production-ae96.up.railway.app/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        // Create an instance of the ApiService
+        ApiService apiService = retrofit.create(ApiService.class);
+
+        // Make the API call
+        Call<ResponseBody> call = apiService.searchFund(fundCode);
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        // Parse the response and display it
+                        String responseBody = response.body().string();
+
+                        // Parse the JSON response using JSONObject
+                        JSONObject jsonObject = new JSONObject(responseBody);
+                        JSONObject stockInfo = jsonObject.getJSONObject("stock_info");
+                        String currentPrice = stockInfo.getString("current_price");
+                        JSONObject growthRates = stockInfo.getJSONObject("growth_rates");
+                        String oneYearGrowthRate = growthRates.getString("1_year");
+
+                        // Set the value to EditText
+                        editTextReturnRate.setText(oneYearGrowthRate);
+                        editTextCurrPrice.setText(currentPrice);
+                        //Toast.makeText(getContext(), "Response: " + responseBody, Toast.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Toast.makeText(getContext(), "Error parsing response", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(getContext(), "API call unsuccessful", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Toast.makeText(getContext(), "Failed to fetch data: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+
+    private void initializeMutualFundMap() {
+        mutualFundMap = new HashMap<>();
+        mutualFundMap.put("ICICI Prudential Bluechip Fund", "ICICINIFTY.NS");
+        mutualFundMap.put("HDFC Top 100 Fund", "HDFCNIFETF.NS");
+        mutualFundMap.put("UTI Nifty Index Fund", "UTINIFTY50.NS");
+        mutualFundMap.put("SBI Bluechip Fund", "SBINIF50.NS");
+        mutualFundMap.put("Axis Bluechip Fund", "AXISNIFTY.NS");
+        mutualFundMap.put("Franklin India Bluechip Fund", "FRANKLININDIA.NS");
+        mutualFundMap.put("Mirae Asset Large Cap Fund", "MIRAEETF.NS");
+        mutualFundMap.put("Kotak Standard Multicap Fund", "KOTAKNIFTY.NS");
+        mutualFundMap.put("Reliance Large Cap Fund", "NIFTYBEES.NS");
+        mutualFundMap.put("Birla Sun Life Frontline Equity Fund", "BIRLANIFTY.NS");
+        mutualFundMap.put("IDFC Nifty Fund", "IDFCNIFTY.NS");
+        mutualFundMap.put("DSP BlackRock Top 100 Equity Fund", "DSPNIFTY100.NS");
+        mutualFundMap.put("HDFC Balanced Advantage Fund", "HDFCBALANCED.NS");
+        mutualFundMap.put("ICICI Prudential Equity & Debt Fund", "ICICIETF.NS");
+        mutualFundMap.put("L&T India Value Fund", "LTVALUEETF.NS");
+        mutualFundMap.put("Kotak Tax Saver Fund", "KOTAKTAXETF.NS");
+        mutualFundMap.put("Tata Equity P/E Fund", "TATAEQUITYETF.NS");
+        mutualFundMap.put("UTI Equity Fund", "UTIEQUITYETF.NS");
+        mutualFundMap.put("Invesco India Growth Fund", "INVESCOETF.NS");
+        mutualFundMap.put("Sundaram Select Focus Fund", "SUNDARAMSELECTETF.NS");
+        mutualFundMap.put("Franklin India Equity Fund", "FRANKLINEQUITYETF.NS");
+        mutualFundMap.put("Mirae Asset Emerging Bluechip Fund", "MIRAEEMERGEBLUEETF.NS");
+        mutualFundMap.put("Canara Robeco Bluechip Equity Fund", "CANARABLUECHIPETF.NS");
+        mutualFundMap.put("Axis Long Term Equity Fund", "AXISLONGETF.NS");
+        mutualFundMap.put("SBI Small Cap Fund", "SBISMALLCAPETF.NS");
+        mutualFundMap.put("HDFC Hybrid Equity Fund", "HDFCHYBRIDETF.NS");
+        mutualFundMap.put("ICICI Prudential Growth Fund", "ICICIGROWETF.NS");
+        mutualFundMap.put("L&T India Growth Fund", "LTINDIAGROWETF.NS");
+        mutualFundMap.put("Birla Sun Life Equity Fund", "BIRLASUNEQUITYETF.NS");
+        mutualFundMap.put("Tata Small Cap Fund", "TATASMALLCAPETF.NS");
+        mutualFundMap.put("DSP BlackRock Equity Fund", "DSPEQUITYETF.NS");
+        mutualFundMap.put("Nippon India Growth Fund", "NIPPONINDIAGROWETF.NS");
+        mutualFundMap.put("Franklin India High Growth Companies Fund", "FRANKLINHIGHGROWTHEETF.NS");
+        mutualFundMap.put("Mirae Asset India Equity Fund", "MIRAEINDIAEQUITYETF.NS");
+        mutualFundMap.put("HDFC Small Cap Fund", "HDFCSMALLCAPETF.NS");
+        mutualFundMap.put("UTI Small Cap Fund", "UTISMALLCAPETF.NS");
+        mutualFundMap.put("ICICI Prudential Nifty Next 50 Index Fund", "ICICINIFTYNEXT50.NS");
+        mutualFundMap.put("Kotak Nifty ETF", "KOTAKNIFTYNEXT50.NS");
+        mutualFundMap.put("Reliance ETF Nifty 50", "RELIANCEETF.NS");
+        mutualFundMap.put("Aditya Birla Sun Life Nifty 50 ETF", "ABSLNIFTY50ETF.NS");
+        mutualFundMap.put("Tata Nifty 50 ETF", "TATANIFTY50ETF.NS");
+        mutualFundMap.put("Franklin India Nifty 50 ETF", "FRANKLININDIAETF.NS");
+        mutualFundMap.put("ICICI Prudential Sensex ETF", "ICICISENSEXETF.NS");
+        mutualFundMap.put("Mirae Asset Nifty 50 ETF", "MIRAEASSETNIFTY50ETF.NS");
+        mutualFundMap.put("HDFC Nifty ETF", "HDFCNIFTYETF.NS");
+        mutualFundMap.put("SBI Nifty ETF", "SBINIFTYETF.NS");
+        mutualFundMap.put("Aditya Birla Sun Life Nifty 50 Index Fund", "BIRLAFNIFTY50ETF.NS");
+        mutualFundMap.put("Axis Nifty 50 ETF", "AXISNIFTY50ETF.NS");
+        mutualFundMap.put("L&T Nifty ETF", "LTNIFTYETF.NS");
+        mutualFundMap.put("Kotak Nifty 50 ETF", "KOTAKNIFTY50ETF.NS");
+        mutualFundMap.put("Nippon India Nifty 50 ETF", "NIPPONINDIANIFTY50ETF.NS");
+        mutualFundMap.put("Canara Robeco Nifty 50 ETF", "CANARANIFTY50ETF.NS");
+        mutualFundMap.put("Sundaram Nifty 50 ETF", "SUNDARANNIFTY50ETF.NS");
+        mutualFundMap.put("Franklin India Nifty 50 Index Fund", "FRANKLININDIANIFTY50ETF.NS");
+        mutualFundMap.put("Mirae Asset Nifty Next 50 ETF", "MIRAEASSETNIFTYNEXT50ETF.NS");
+        mutualFundMap.put("Tata Nifty Next 50 ETF", "TATANIFTYNEXT50ETF.NS");
+        mutualFundMap.put("Aditya Birla Sun Life Nifty Next 50 ETF", "BIRLANIFTYNEXT50ETF.NS");
+        mutualFundMap.put("HDFC Nifty Next 50 ETF", "HDFCNIFTYNEXT50ETF.NS");
+        mutualFundMap.put("Axis Nifty Next 50 ETF", "AXISNIFTYNEXT50ETF.NS");
+        mutualFundMap.put("Reliance Nifty Next 50 ETF", "NIPPONINDIANIFTYNEXT50ETF.NS");
+        mutualFundMap.put("L&T Nifty Next 50 ETF", "LTNIFTYNEXT50ETF.NS");
+        mutualFundMap.put("SBI Nifty Next 50 ETF", "SBINIFTYNEXT50ETF.NS");
+        mutualFundMap.put("Kotak Nifty Next 50 ETF", "KOTAKNIFTYNEXT50ETF.NS");
+        mutualFundMap.put("Franklin India Nifty Next 50 ETF", "FRANKLININDIANIFTYNEXT50ETF.NS");
+
+        // Add the rest of the items as needed
+    }
+
+
     private void validateInput() {
         String returnRate = editTextReturnRate.getText().toString().trim();
         String amount = editTextAmount.getText().toString().trim();
@@ -209,23 +335,6 @@ public class AddInvestment extends Fragment {
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a", Locale.getDefault());
         return timeFormat.format(calendar.getTime());
-    }
-
-    private void showTimePicker() {
-        Calendar calendar = Calendar.getInstance();
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);
-        int minute = calendar.get(Calendar.MINUTE);
-
-        TimePickerDialog timePickerDialog = new TimePickerDialog(
-                getContext(),
-                (view, selectedHour, selectedMinute) -> {
-                    String amPm = selectedHour >= 12 ? "PM" : "AM";
-                    int hourIn12Format = selectedHour % 12 == 0 ? 12 : selectedHour % 12;
-                    timeText.setText(String.format("%02d:%02d %s", hourIn12Format, selectedMinute, amPm));
-                },
-                hour, minute, false);
-
-        timePickerDialog.show();
     }
 
     private void showDatePicker() {
@@ -247,70 +356,49 @@ public class AddInvestment extends Fragment {
         datePickerDialog.show();
     }
 
-    private void updateTotalExpense(String year, String month, double newExpense) {
-        DocumentReference totalExpenseDoc = firestore.collection("users").document(userId)
-                .collection("expense").document(year).collection(month).document("totalExpense");
+    private void showTimePicker() {
+        Calendar calendar = Calendar.getInstance();
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        int minute = calendar.get(Calendar.MINUTE);
 
-        // Get the current total expense for the month
-        totalExpenseDoc.get().addOnSuccessListener(documentSnapshot -> {
-            double currentTotal = documentSnapshot.exists() ? documentSnapshot.getDouble("total") : 0.0;
-            double updatedTotal = currentTotal + newExpense;
+        TimePickerDialog timePickerDialog = new TimePickerDialog(
+                getContext(),
+                (view, selectedHour, selectedMinute) -> {
+                    String amPm = selectedHour >= 12 ? "PM" : "AM";
+                    int hourIn12Format = selectedHour % 12 == 0 ? 12 : selectedHour % 12;
+                    timeText.setText(String.format("%02d:%02d %s", hourIn12Format, selectedMinute, amPm));
+                },
+                hour, minute, false);
 
-            // Update the total expense for that month
-            totalExpenseDoc.set(Map.of("total", updatedTotal))
-                    .addOnSuccessListener(aVoid -> {
-                        // Update yearly total expense
-                        updateYearlyExpense(year, newExpense);
-
-                    })
-                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update monthly total expense.", Toast.LENGTH_SHORT).show());
-        }).addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to load current monthly expense.", Toast.LENGTH_SHORT).show());
-    }
-
-    private void updateYearlyExpense(String year, double newExpense) {
-        DocumentReference yearlyExpenseDoc = firestore.collection("users").document(userId)
-                .collection("expense").document("totalYearlyExpense"); // No need to use the year here
-
-        // Check if the totalYearlyExpense document exists
-        yearlyExpenseDoc.get().addOnSuccessListener(documentSnapshot -> {
-            double currentYearlyTotal = documentSnapshot.exists() ? documentSnapshot.getDouble("total") : 0.0;
-            double updatedYearlyTotal = currentYearlyTotal + newExpense;
-
-            // Set or update the total yearly expense in the document
-            yearlyExpenseDoc.set(Map.of("total", updatedYearlyTotal))
-                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update yearly expense.", Toast.LENGTH_SHORT).show());
-        }).addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to load current yearly expense.", Toast.LENGTH_SHORT).show());
+        timePickerDialog.show();
     }
 
     public static class InvestmentEntry {
         private String mutualFund;
-        private String date;
-        private String time;
+        private String fundCode;
         private String returnRate;
         private double amount;
+        private String date;
+        private String time;
 
         public InvestmentEntry() {
         }
 
-        public InvestmentEntry(String mutualFund,String returnRate,double amount, String date, String time) {
-            this.mutualFund=mutualFund;
-            this.returnRate=returnRate;
+        public InvestmentEntry(String mutualFund, String fundCode, String returnRate, double amount, String date, String time) {
+            this.mutualFund = mutualFund;
+            this.fundCode = fundCode;
+            this.returnRate = returnRate;
             this.amount = amount;
             this.date = date;
             this.time = time;
-
         }
 
         public String getMutualFund() {
             return mutualFund;
         }
 
-        public String getDate() {
-            return date;
-        }
-
-        public String getTime() {
-            return time;
+        public String getFundCode() {
+            return fundCode;
         }
 
         public String getReturnRate() {
@@ -320,50 +408,13 @@ public class AddInvestment extends Fragment {
         public double getAmount() {
             return amount;
         }
-    }
-
-    public static class ExpenseEntry {
-        private double amount;
-        private String date;
-        private String time;
-        private String category;
-        private String paymentMode;
-        private String note;
-
-        public ExpenseEntry() {
-        }
-
-        public ExpenseEntry(double amount, String date, String time, String category, String paymentMode,String note) {
-            this.amount = amount;
-            this.date = date;
-            this.time = time;
-            this.category = category;
-            this.paymentMode = paymentMode;
-            this.note=note;
-        }
-
-        public double getAmount() {
-            return amount;
-        }
 
         public String getDate() {
             return date;
         }
 
-        public String getNote() {
-            return note;
-        }
-
         public String getTime() {
             return time;
-        }
-
-        public String getCategory() {
-            return category;
-        }
-
-        public String getPaymentMode() {
-            return paymentMode;
         }
     }
 }
