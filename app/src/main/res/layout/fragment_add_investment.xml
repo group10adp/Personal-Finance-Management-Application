@@ -11,6 +11,15 @@
         android:background="#121212"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         android:elevation="4dp">
+<!--        <ImageView-->
+<!--            android:id="@+id/back_arrow"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:src="@drawable/back_arrow"-->
+<!--            android:contentDescription="Back"-->
+<!--            android:layout_marginStart="8dp"-->
+<!--            android:padding="8dp"-->
+<!--            android:tint="@android:color/white" />-->
 
         <TextView
             android:layout_width="wrap_content"

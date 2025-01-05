@@ -2,6 +2,7 @@ package com.example.financemanager;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -45,6 +46,8 @@ public class ManageBudgetActivity extends AppCompatActivity {
 
         // Fetch budget data
         fetchBudgetData();
+        ImageView backArrow = findViewById(R.id.back_arrow);
+        backArrow.setOnClickListener(v -> onBackPressed());
     }
 
     private void fetchBudgetData() {

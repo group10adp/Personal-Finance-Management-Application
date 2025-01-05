@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.NumberPicker;
 import android.widget.TextView;
 
@@ -98,6 +99,7 @@ public class BudgetSetupActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+        
     }
 
     // Sets up the behavior for the toggle buttons

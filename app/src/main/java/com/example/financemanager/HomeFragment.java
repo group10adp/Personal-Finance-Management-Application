@@ -11,9 +11,11 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -37,7 +39,7 @@ public class HomeFragment extends Fragment {
     private TextView incomeTextView, expenseTextView, balanceTextView, time_of_day;
     private LinearLayout incomeLayout, spendingLayout; // Added spendingLayout for Spending section click
     private FirebaseFirestore firestore;
-    private DocumentReference totalIncomeRef, totalExpenseRef;
+    private DocumentReference totalIncomeRef, totalExpenseRef, totalIncomeRef1, totalExpenseRef1;
 
     private ImageView profile;
 
@@ -51,6 +53,7 @@ public class HomeFragment extends Fragment {
     private RecyclerView recyclerView;
     private TransactionAdapter incomeAdapter;
     private List<TransactionModel> incomeList;
+    TextView popUpText;
 
 
     @SuppressLint("MissingInflatedId")
@@ -63,6 +66,9 @@ public class HomeFragment extends Fragment {
 
         auth = FirebaseAuth.getInstance();
         userId = String.valueOf(auth.getCurrentUser().getUid());
+
+        ImageView dropDown = view.findViewById(R.id.dropDown);
+        popUpText=view.findViewById(R.id.popUpText);
 
         // Initialize the TextViews
         incomeTextView = view.findViewById(R.id.incomeTextView);
@@ -78,12 +84,11 @@ public class HomeFragment extends Fragment {
         spendingLayout = view.findViewById(R.id.spendingLayout); // Spending layout reference
 
         // Initialize Firebase Firestore instance
+
         firestore = FirebaseFirestore.getInstance();
         int currentYear = Calendar.getInstance().get(Calendar.YEAR);
 
         int currentMonth = Calendar.getInstance().get(Calendar.MONTH) + 01;
-
-        Log.d("year",""+currentMonth);
 
         totalIncomeRef = firestore.collection("users").document(userId)
                 .collection("income")
@@ -97,7 +102,40 @@ public class HomeFragment extends Fragment {
                 .collection(String.valueOf(currentMonth))
                 .document("totalExpense");
 
+        totalIncomeRef1 = firestore.collection("users").document(userId)
+                .collection("income")
+                .document("totalYearlyIncome");
+
+// Reference to the total yearly expense
+        totalExpenseRef1 = firestore.collection("users").document(userId)
+                .collection("expense")
+                .document("totalYearlyExpense");
+
         // Retrieve the total income and expense
+
+        dropDown.setOnClickListener(v -> {
+            PopupMenu popupMenu = new PopupMenu(requireContext(), v);
+            popupMenu.getMenuInflater().inflate(R.menu.popup_menu_home, popupMenu.getMenu());
+
+            popupMenu.setOnMenuItemClickListener(item -> {
+
+                if (item.getItemId() == R.id.this_month) {
+                    popUpText.setText("This month");
+                    fetchTotalExpenseIncome();
+
+
+                } else if (item.getItemId() == R.id.this_year) {
+                    popUpText.setText("This year");
+                    fetchTotalYearlyExpenseIncome();
+
+                }
+
+                return true;
+            });
+
+            popupMenu.show();
+        });
+
         fetchTotalExpenseIncome();
 
         // Set up profile click listener
@@ -181,6 +219,39 @@ public class HomeFragment extends Fragment {
         });
 
         totalExpenseRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                DocumentSnapshot documentSnapshot = task.getResult();
+                if (documentSnapshot != null && documentSnapshot.exists()) {
+                    totalExpense = documentSnapshot.getDouble("total").doubleValue();
+                    expenseTextView.setText("₹" + totalExpense);
+                } else {
+                    expenseTextView.setText("₹0.00");
+                }
+            } else {
+                expenseTextView.setText("₹0.00");
+            }
+            updateBalance();
+        });
+    }
+
+    private void fetchTotalYearlyExpenseIncome() {
+        totalIncomeRef1.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                DocumentSnapshot documentSnapshot = task.getResult();
+                if (documentSnapshot != null && documentSnapshot.exists()) {
+                    totalIncome = documentSnapshot.getDouble("total").doubleValue();
+                    incomeTextView.setText("₹" + totalIncome);
+                    Log.d("expense",""+totalExpense+" "+totalIncome);
+                } else {
+                    incomeTextView.setText("₹0.00");
+                }
+            } else {
+                incomeTextView.setText("₹0.00");
+            }
+            updateBalance();
+        });
+
+        totalExpenseRef1.get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 DocumentSnapshot documentSnapshot = task.getResult();
                 if (documentSnapshot != null && documentSnapshot.exists()) {

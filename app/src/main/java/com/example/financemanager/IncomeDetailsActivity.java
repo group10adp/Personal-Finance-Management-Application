@@ -2,6 +2,7 @@ package com.example.financemanager;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -61,6 +62,9 @@ public class IncomeDetailsActivity extends AppCompatActivity {
 
         // Fetch income data from Firestore
         fetchIncomeData(year, month);
+
+        ImageView backArrow = findViewById(R.id.back_arrow);
+        backArrow.setOnClickListener(v -> onBackPressed());
     }
 
     private void fetchIncomeData(String year, String month) {

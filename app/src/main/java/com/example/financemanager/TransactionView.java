@@ -166,9 +166,11 @@ public class TransactionView extends AppCompatActivity {
 ////            // Simulate saving operation or dismiss dialog after completion
 //            new Handler().postDelayed(() -> loadingDialog.dismiss(), 2000); // Dismiss after 2 seconds (example)
 
-            finish();
+            onBackPressed();
         });
 
+        ImageView backArrow = findViewById(R.id.back_arrow);
+        backArrow.setOnClickListener(v -> onBackPressed());
 
 
     }

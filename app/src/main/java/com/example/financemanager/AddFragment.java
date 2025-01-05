@@ -2,6 +2,8 @@ package com.example.financemanager;
 
 import android.graphics.Color;
 import android.os.Bundle;
+
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -10,6 +12,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
@@ -23,6 +26,12 @@ public class AddFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_add, container, false);
 
         getActivity().getWindow().setStatusBarColor(Color.parseColor("#121212"));
+
+//        ImageView backArrow = view.findViewById(R.id.back_arrow);
+//        backArrow.setOnClickListener(v -> {
+//            setupOnBackPressed();
+//        });
+
 
         // Initialize TabLayout and ViewPager2
         TabLayout tabLayout = view.findViewById(R.id.tabLayout);
@@ -50,4 +59,18 @@ public class AddFragment extends Fragment {
 
         return view;
     }
+
+    private void setupOnBackPressed(){
+        requireActivity().getOnBackPressedDispatcher().addCallback(new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if(isEnabled()){
+                    setEnabled(false);
+                    requireActivity().onBackPressed();
+                }
+            }
+        });
+    }
+
+
 }

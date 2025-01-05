@@ -2,6 +2,7 @@ package com.example.financemanager;
 
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -17,6 +18,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -84,7 +86,14 @@ public class AddInvestment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_add_investment, container, false);
 
+        getActivity().getWindow().setStatusBarColor(Color.parseColor("#121212"));
         // Initialize views
+
+//        ImageView backArrow = view.findViewById(R.id.back_arrow);
+//        backArrow.setOnClickListener(v -> {
+//            setupOnBackPressed();
+//        });
+
         auth = FirebaseAuth.getInstance();
         userId = auth.getCurrentUser().getUid();
         spinnerMutualFund = view.findViewById(R.id.spinner_mutual_fund);
@@ -193,6 +202,18 @@ public class AddInvestment extends Fragment {
 
         return view;
     }
+    private void setupOnBackPressed(){
+        requireActivity().getOnBackPressedDispatcher().addCallback(new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if(isEnabled()){
+                    setEnabled(false);
+                    requireActivity().onBackPressed();
+                }
+            }
+        });
+    }
+
 
     private void performApiRequest(String fundCode) {
         // Trim the fundCode to remove leading and trailing spaces
