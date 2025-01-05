@@ -1,7 +1,8 @@
 package com.example.financemanager;
 
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,13 +34,12 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         TransactionModel transaction = incomeList.get(position);
 
         // Set text for transaction details
-        holder.tvPrice.setText("₹" + transaction.getPrice());
+        holder.tvPrice.setText("₹" + transaction.getAmount());
         holder.tvCategory.setText(transaction.getCategory());
         holder.tvDate.setText(transaction.getDate());
         holder.tvTime.setText(transaction.getTime());
 
         // Change text color based on type (Income or Expense)
-        Log.d("Harami:",transaction.getType());
         if ("Income".equalsIgnoreCase(transaction.getType())) {
 
             // Income: Green shades
@@ -54,6 +54,18 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
             holder.tvPrice.setTextColor(Color.BLACK);
             holder.tvCategory.setTextColor(Color.BLACK);
         }
+
+        holder.itemView.setOnClickListener(v -> {
+
+            Context context = holder.itemView.getContext();
+            // Show a toast with the document ID
+            String docId = transaction.getDocId() != null ? transaction.getDocId() : "";
+            Intent intent = new Intent(context,TransactionView.class);
+            intent.putExtra("docId", docId);
+            intent.putExtra("from", "transaction");
+            context.startActivity(intent);
+            //Toast.makeText(holder.itemView.getContext(), "Doc ID: " + docId, Toast.LENGTH_SHORT).show();
+        });
     }
 
     @Override

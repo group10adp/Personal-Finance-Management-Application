@@ -240,14 +240,17 @@ public class HomeFragment extends Fragment {
 
                                 // Safely retrieve 'amount', 'category', 'date', 'time', and 'type'
                                 Double amount = document.getDouble("amount");
-                                String amountString = String.valueOf(amount != null ? amount : 0.0);
+                                double amountString = amount != null ? amount : 0.0;
                                 String category = document.getString("category") != null ? document.getString("category") : "Unknown";
                                 String date = document.getString("date") != null ? document.getString("date") : "01 Jan 1970";
                                 String time = document.getString("time") != null ? document.getString("time") : "12:00 AM";
                                 String type = document.getString("type");
+                                String note = document.getString("note");
+                                String docId =document.getId();
+                                String paymentMode = document.getString("paymentMode");
 
                                 // Add the transaction to the list
-                                incomeList.add(new TransactionModel(amountString, category, date, time, type));
+                                incomeList.add(new TransactionModel(amountString, category, date, time, type,note,docId,paymentMode));
                             }
 
                             // Sort the list by date and time in descending order

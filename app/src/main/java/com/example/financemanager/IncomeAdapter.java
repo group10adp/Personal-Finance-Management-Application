@@ -1,5 +1,7 @@
 package com.example.financemanager;
 
+import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,10 +29,22 @@ public class IncomeAdapter extends RecyclerView.Adapter<IncomeAdapter.IncomeView
     @Override
     public void onBindViewHolder(@NonNull IncomeViewHolder holder, int position) {
         IncomeModel income = incomeList.get(position);
-        holder.tvPrice.setText("₹" + income.getPrice());
+        holder.tvPrice.setText("₹" + income.getAmount());
         holder.tvCategory.setText(income.getCategory());
         holder.tvDate.setText(income.getDate());
         holder.tvTime.setText(income.getTime());
+
+        holder.itemView.setOnClickListener(v -> {
+
+            Context context = holder.itemView.getContext();
+            // Show a toast with the document ID
+            String docId = income.getDocId() != null ? income.getDocId() : "";
+            Intent intent = new Intent(context,TransactionView.class);
+            intent.putExtra("docId", docId);
+            intent.putExtra("from", "income");
+            context.startActivity(intent);
+            //Toast.makeText(holder.itemView.getContext(), "Doc ID: " + docId, Toast.LENGTH_SHORT).show();
+        });
     }
 
     @Override

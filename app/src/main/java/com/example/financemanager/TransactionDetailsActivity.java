@@ -94,14 +94,18 @@ public class TransactionDetailsActivity extends AppCompatActivity {
                                     continue; // Skip this entry
                                 }
 
+                                Log.d("documentid",""+document.getId());
+
                                 // Safely retrieve 'amount' as Double
                                 Double amount = document.getDouble("amount");
                                 if (amount == null) {
                                     amount = 0.0; // Assign default value if 'amount' is null
                                 }
 
+
+
                                 // Convert amount (Double) to String
-                                String amountString = String.valueOf(amount);
+                                double amountString = amount;
 
                                 // Get 'category', 'date', and 'time' safely
                                 String category = document.getString("category");
@@ -114,15 +118,22 @@ public class TransactionDetailsActivity extends AppCompatActivity {
                                     date = "01 Jan 1970"; // Default date for invalid entries
                                 }
 
+                                String note = document.getString("note");
+                                if (note == null) {
+                                    note = ""; // Default category
+                                }
+
                                 String time = document.getString("time");
                                 if (time == null) {
                                     time = "12:00 AM"; // Default time for invalid entries
                                 }
 
                                 String type = document.getString("type");
+                                String docId =document.getId();
+                                String paymentMode = document.getString("paymentMode");
 
                                 // Create a new IncomeModel object and add it to the list
-                                incomeList.add(new TransactionModel(amountString, category, date, time,type));
+                                incomeList.add(new TransactionModel(amountString, category, date, time,type,note,docId,paymentMode));
                             }
 
                             // Sort the list based on date and time in descending order

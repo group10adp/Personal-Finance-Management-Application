@@ -3,65 +3,79 @@ package com.example.financemanager;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
+
+import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FieldValue;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.Map;
-import androidx.appcompat.app.AlertDialog;
 
-public class ExpenseFragment extends Fragment {
+public class TransactionView extends AppCompatActivity {
+
+    String docId,from;
 
     private EditText amountEditText,note1;;
     private Button saveButton;
     private TextView dateText;
     private TextView timeText;
-    private Spinner categorySpinner, paymentModeSpinner;
+    private TextView categorySpinner, paymentModeSpinner;
     private FirebaseFirestore firestore;
 
     FirebaseAuth auth;
 
     private String userId;
+    ExpenseFragment.CustomLoadingDialog loadingDialog;
 
-    CustomLoadingDialog loadingDialog;
 
-    @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_expense, container, false);
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_transaction_view);
+
+        Intent intent = getIntent();
+        docId = intent.getStringExtra("docId");
+        from =  intent.getStringExtra("from");
 
         auth = FirebaseAuth.getInstance();
         userId = String.valueOf(auth.getCurrentUser().getUid());
 
         // Initialize views
-        note1=view.findViewById(R.id.notes);
-        amountEditText = view.findViewById(R.id.amountEditText);
-        saveButton = view.findViewById(R.id.saveButton);
-        dateText = view.findViewById(R.id.dateText);
-        timeText = view.findViewById(R.id.timeText);
-        categorySpinner = view.findViewById(R.id.categorySpinner);
-        paymentModeSpinner = view.findViewById(R.id.paymentModeSpinner);
-        ImageView dateIcon = view.findViewById(R.id.dateIcon);
-        ImageView timeIcon = view.findViewById(R.id.timeIcon);
+        note1=findViewById(R.id.notes);
+        amountEditText = findViewById(R.id.amountEditText);
+        saveButton = findViewById(R.id.saveButton);
+        dateText = findViewById(R.id.dateText);
+        timeText = findViewById(R.id.timeText);
+        categorySpinner = findViewById(R.id.categorySpinner);
+        paymentModeSpinner = findViewById(R.id.paymentModeSpinner);
+        ImageView dateIcon = findViewById(R.id.dateIcon);
+        ImageView timeIcon = findViewById(R.id.timeIcon);
+
+        amountEditText.setFocusable(false); // Disable focus
+        amountEditText.setFocusableInTouchMode(false); // Disable focus in touch mode
+        amountEditText.setClickable(false);
+
+        note1.setFocusable(false); // Disable focus
+        note1.setFocusableInTouchMode(false); // Disable focus in touch mode
+        note1.setClickable(false);
 
         // Set current date and time
         dateText.setText(getCurrentDate());
@@ -72,40 +86,91 @@ public class ExpenseFragment extends Fragment {
         timeIcon.setOnClickListener(v -> showTimePicker());
         timeText.setOnClickListener(v -> showTimePicker());
 
-        loadingDialog = new CustomLoadingDialog(getContext());
+        loadingDialog = new ExpenseFragment.CustomLoadingDialog(this);
 
-        // Set up ArrayAdapter for categorySpinner
-        ArrayAdapter<CharSequence> categoryAdapter = ArrayAdapter.createFromResource(
-                requireContext(),
-                R.array.category_array, // Use a different array for expense categories
-                android.R.layout.simple_spinner_item
-        );
-        categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        categorySpinner.setAdapter(categoryAdapter);
+        String year = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
 
-        // Set up ArrayAdapter for paymentModeSpinner
-        ArrayAdapter<CharSequence> paymentModeAdapter = ArrayAdapter.createFromResource(
-                requireContext(),
-                R.array.payment_mode_array,
-                android.R.layout.simple_spinner_item
-        );
-        paymentModeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        paymentModeSpinner.setAdapter(paymentModeAdapter);
+        String month = String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1);
 
-        // Initialize Firestore instance
+
         firestore = FirebaseFirestore.getInstance();
+
+
+        firestore.collection("users")
+                .document(userId) // Kq2rEqmQn8a9OYFluJc52HrxdRB2
+                .collection(from)
+                .document(year) // Year
+                .collection(month) // Month
+                .document(docId) // JOFRHly06EUDmTx7NN3d
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        //Log.d("DocumentSnapshot", documentSnapshot.getData().toString());
+
+                        TransactionModel expenseEntry = documentSnapshot.toObject(TransactionModel.class);
+                        if (expenseEntry != null) {
+                            // Use the retrieved data
+                            double  amount = expenseEntry.getAmount();
+                            amountEditText.setText(String.valueOf(amount));
+
+
+                            String category = expenseEntry.getCategory();
+                            if (category == null) {
+                                category = "Unknown"; // Default category
+                            }
+                            categorySpinner.setText(category);
+
+                            String date = expenseEntry.getDate();
+                            if (date == null) {
+                                date = "01 Jan 1970"; // Default date for invalid entries
+                            }
+                            dateText.setText(date);
+
+                            String note = expenseEntry.getNote();
+                            if (note == null) {
+                                note = ""; // Default category
+                            }
+
+                            note1.setText(note);
+
+                            String time = expenseEntry.getTime();
+                            if (time == null) {
+                                time = "12:00 AM"; // Default time for invalid entries
+                            }
+                            timeText.setText(time);
+
+                            String paymentMode = expenseEntry.getPaymentMode();
+                            paymentModeSpinner.setText(paymentMode);
+
+
+
+                        }
+                        Log.d("DataRetrieved", "Amount: ");
+
+                    } else {
+                        Log.e("FirestoreError", "No such document found.");
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("FirestoreError", "Error retrieving document: ", e);
+                });
+
+
 
         // Set click listener on save button
         saveButton.setOnClickListener(v -> {
 
-            saveExpense(); // Call the saveIncome method
-            loadingDialog.show();
+//            saveExpense(); // Call the saveIncome method
+//            loadingDialog.show();
+////
+////            // Simulate saving operation or dismiss dialog after completion
+//            new Handler().postDelayed(() -> loadingDialog.dismiss(), 2000); // Dismiss after 2 seconds (example)
 
-            // Simulate saving operation or dismiss dialog after completion
-            new Handler().postDelayed(() -> loadingDialog.dismiss(), 2000); // Dismiss after 2 seconds (example)
+            finish();
         });
 
-        return view;
+
+
     }
 
     private void saveExpense() {
@@ -113,8 +178,8 @@ public class ExpenseFragment extends Fragment {
         String date = dateText.getText().toString().trim();
         String time = timeText.getText().toString().trim();
         String note=note1.getText().toString().trim();
-        String category = categorySpinner.getSelectedItem().toString();
-        String paymentMode = paymentModeSpinner.getSelectedItem().toString();
+        String category = categorySpinner.getText().toString();
+        String paymentMode = paymentModeSpinner.getText().toString();
 
         if (!amountStr.isEmpty()) {
             double amount = Double.parseDouble(amountStr);
@@ -125,7 +190,7 @@ public class ExpenseFragment extends Fragment {
             String month = String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1); // Get the current month in MM format
 
             // Create an ExpenseEntry object
-            ExpenseEntry expenseEntry = new ExpenseEntry(amount, date, time, category, paymentMode,note);
+            ExpenseFragment.ExpenseEntry expenseEntry = new ExpenseFragment.ExpenseEntry(amount, date, time, category, paymentMode,note);
 
             String type="Expense";
             IncomeFragment.TransactionEntry transactionEntry = new IncomeFragment.TransactionEntry(amount, date, time, category, paymentMode,note,type);
@@ -140,7 +205,7 @@ public class ExpenseFragment extends Fragment {
                         // Update total expense for the user
                         updateTotalExpense(year, month, amount);
                     })
-                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save expense entry.", Toast.LENGTH_SHORT).show());
+                    .addOnFailureListener(e -> Toast.makeText(this, "Failed to save expense entry.", Toast.LENGTH_SHORT).show());
 
             firestore.collection("users").document(userId)
                     .collection("transaction")
@@ -149,12 +214,12 @@ public class ExpenseFragment extends Fragment {
                     .add(transactionEntry)
                     .addOnSuccessListener(documentReference -> {
                     })
-                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save income entry.", Toast.LENGTH_SHORT).show());
+                    .addOnFailureListener(e -> Toast.makeText(this, "Failed to save income entry.", Toast.LENGTH_SHORT).show());
 
 
 
         } else {
-            Toast.makeText(getContext(), "Please enter an amount.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Please enter an amount.", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -172,13 +237,13 @@ public class ExpenseFragment extends Fragment {
                     .addOnSuccessListener(aVoid -> {
                         // Update yearly total expense
                         updateYearlyExpense(year, newExpense);
-                        Toast.makeText(getContext(), "Expense saved successfully!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Expense saved successfully!", Toast.LENGTH_SHORT).show();
                         amountEditText.setText("");
                         note1.setText("");
                         loadingDialog.dismiss();
                     })
-                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update monthly total expense.", Toast.LENGTH_SHORT).show());
-        }).addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to load current monthly expense.", Toast.LENGTH_SHORT).show());
+                    .addOnFailureListener(e -> Toast.makeText(this, "Failed to update monthly total expense.", Toast.LENGTH_SHORT).show());
+        }).addOnFailureListener(e -> Toast.makeText(this, "Failed to load current monthly expense.", Toast.LENGTH_SHORT).show());
     }
 
     private void updateYearlyExpense(String year, double newExpense) {
@@ -192,8 +257,8 @@ public class ExpenseFragment extends Fragment {
 
             // Set or update the total yearly expense in the document
             yearlyExpenseDoc.set(Map.of("total", updatedYearlyTotal))
-                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update yearly expense.", Toast.LENGTH_SHORT).show());
-        }).addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to load current yearly expense.", Toast.LENGTH_SHORT).show());
+                    .addOnFailureListener(e -> Toast.makeText(this, "Failed to update yearly expense.", Toast.LENGTH_SHORT).show());
+        }).addOnFailureListener(e -> Toast.makeText(this, "Failed to load current yearly expense.", Toast.LENGTH_SHORT).show());
     }
 
     private String getCurrentDate() {
@@ -214,7 +279,7 @@ public class ExpenseFragment extends Fragment {
         int minute = calendar.get(Calendar.MINUTE);
 
         TimePickerDialog timePickerDialog = new TimePickerDialog(
-                getContext(),
+                this,
                 (view, selectedHour, selectedMinute) -> {
                     String amPm = selectedHour >= 12 ? "PM" : "AM";
                     int hourIn12Format = selectedHour % 12 == 0 ? 12 : selectedHour % 12;
@@ -232,7 +297,7 @@ public class ExpenseFragment extends Fragment {
         int day = calendar.get(Calendar.DAY_OF_MONTH);
 
         DatePickerDialog datePickerDialog = new DatePickerDialog(
-                getContext(),
+                this,
                 (view, selectedYear, selectedMonth, selectedDay) -> {
                     SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
                     Calendar selectedDate = Calendar.getInstance();
@@ -341,7 +406,7 @@ public class ExpenseFragment extends Fragment {
         }
     }
 
-    public static class CustomLoadingDialog {
+    public class CustomLoadingDialog {
         private final AlertDialog dialog;
 
         public CustomLoadingDialog(Context context) {

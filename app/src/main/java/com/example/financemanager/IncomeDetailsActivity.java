@@ -93,7 +93,7 @@ public class IncomeDetailsActivity extends AppCompatActivity {
                                 }
 
                                 // Convert amount (Double) to String
-                                String amountString = String.valueOf(amount);
+                                double amountString = amount;
 
                                 // Get 'category', 'date', and 'time' safely
                                 String category = document.getString("category");
@@ -111,8 +111,17 @@ public class IncomeDetailsActivity extends AppCompatActivity {
                                     time = "12:00 AM"; // Default time for invalid entries
                                 }
 
+                                String note = document.getString("note");
+                                if (note == null) {
+                                    note = ""; // Default category
+                                }
+
+
+                                String docId =document.getId();
+                                String paymentMode = document.getString("paymentMode");
+
                                 // Create a new IncomeModel object and add it to the list
-                                incomeList.add(new IncomeModel(amountString, category, date, time));
+                                incomeList.add(new IncomeModel(amountString, category, date, time,note,docId,paymentMode));
                             }
 
                             // Sort the list based on date and time in descending order

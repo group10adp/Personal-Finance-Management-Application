@@ -269,6 +269,7 @@ public class AddInvestment extends Fragment {
         mutualFundMap.put("SBI Long Term Equity Fund Dir Gr", "0P0000XVL9.BO");
         mutualFundMap.put("Groww Nifty India Defence Etf", "GROWWDEFNC.NS");
         mutualFundMap.put("UTI Nifty Bank ETF", "UTIBANKETF.NS");
+        mutualFundMap.put("Others", "Others");
 
         // Add the rest of the items as needed
     }

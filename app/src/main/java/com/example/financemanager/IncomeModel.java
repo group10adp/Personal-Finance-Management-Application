@@ -2,24 +2,37 @@ package com.example.financemanager;
 
 public class IncomeModel {
 
-    private String price;
+    private double amount;
     private String category;
     private String date;
     private String time;
 
-    public IncomeModel(String price, String category, String date, String time) {
-        this.price = price;
+    private String note;
+    private String docId;
+    private String paymentMode;
+
+    public IncomeModel(){
+
+    }
+
+
+
+    public IncomeModel(double amount, String category, String date, String time, String note, String docId, String paymentMode) {
+        this.amount = amount;
         this.category = category;
         this.date = date;
         this.time = time;
+        this.note = note;
+        this.docId = docId;
+        this.paymentMode = paymentMode;
     }
 
-    public String getPrice() {
-        return price;
+    public double getAmount() {
+        return amount;
     }
 
-    public void setPrice(String price) {
-        this.price = price;
+    public void setAmount(double amount) {
+        this.amount = amount;
     }
 
     public String getCategory() {
@@ -46,10 +59,34 @@ public class IncomeModel {
         this.time = time;
     }
 
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
+
+    public String getDocId() {
+        return docId;
+    }
+
+    public void setDocId(String docId) {
+        this.docId = docId;
+    }
+
+    public String getPaymentMode() {
+        return paymentMode;
+    }
+
+    public void setPaymentMode(String paymentMode) {
+        this.paymentMode = paymentMode;
+    }
+
     @Override
     public String toString() {
         return "IncomeModel{" +
-                "price='" + price + '\'' +
+                "price='" + amount + '\'' +
                 ", category='" + category + '\'' +
                 ", date='" + date + '\'' +
                 ", time='" + time + '\'' +
