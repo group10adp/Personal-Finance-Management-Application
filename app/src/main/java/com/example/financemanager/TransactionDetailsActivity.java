@@ -1,8 +1,11 @@
 package com.example.financemanager;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,6 +19,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -34,6 +39,10 @@ public class TransactionDetailsActivity extends AppCompatActivity {
     private FirebaseFirestore firestore;
     FirebaseAuth auth;
     private String userId;
+    ImageView import_file;
+    private static final int PICK_FILE_REQUEST = 1;
+    private Uri fileUri;
+    private StorageReference storageReference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +67,11 @@ public class TransactionDetailsActivity extends AppCompatActivity {
 
         incomeAdapter = new TransactionAdapter(incomeList);
         recyclerView.setAdapter(incomeAdapter);
+        import_file=findViewById(R.id.import_pdf_button);
+
+        storageReference = FirebaseStorage.getInstance().getReference();
+
+        import_file.setOnClickListener(v -> openFileChooser());
 
         // Initialize Firestore
         firestore = FirebaseFirestore.getInstance();
@@ -73,6 +87,40 @@ public class TransactionDetailsActivity extends AppCompatActivity {
         backArrow.setOnClickListener(v -> onBackPressed());
 
     }
+    private void openFileChooser() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("application/pdf");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        startActivityForResult(Intent.createChooser(intent, "Select PDF"), PICK_FILE_REQUEST);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PICK_FILE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            fileUri = data.getData();
+            uploadFileToFirebase(fileUri);
+        }
+    }
+
+    private void uploadFileToFirebase(Uri fileUri) {
+        if (fileUri != null) {
+            StorageReference fileRef = storageReference.child("uploads/" + System.currentTimeMillis() + ".pdf");
+            fileRef.putFile(fileUri)
+                    .addOnSuccessListener(taskSnapshot -> fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                        String downloadUrl = uri.toString();
+                        Log.d("FirebaseStorage", "Uploaded File URL: " + downloadUrl);
+                        Toast.makeText(TransactionDetailsActivity.this, "File Uploaded Successfully!", Toast.LENGTH_SHORT).show();
+                    }))
+                    .addOnFailureListener(e -> {
+                        Log.e("FirebaseStorage", "File Upload Failed: " + e.getMessage());
+                        Toast.makeText(TransactionDetailsActivity.this, "File Upload Failed!", Toast.LENGTH_SHORT).show();
+                    });
+        } else {
+            Toast.makeText(this, "No file selected!", Toast.LENGTH_SHORT).show();
+        }
+    }
+
 
     private void fetchTransactionData(String year, String month) {
         firestore.collection("users")

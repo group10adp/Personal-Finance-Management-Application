@@ -99,7 +99,6 @@ public class BudgetSetupActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-        
     }
 
     // Sets up the behavior for the toggle buttons

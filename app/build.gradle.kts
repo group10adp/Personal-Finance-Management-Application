@@ -1,3 +1,5 @@
+import org.gradle.internal.impldep.com.amazonaws.PredefinedClientConfigurations.defaultConfig
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.google.gms.google.services)
@@ -62,6 +64,7 @@ dependencies {
     implementation(libs.ui.tooling.preview)
     implementation(libs.material3)
     implementation ("com.facebook.shimmer:shimmer:0.5.0")
+    implementation(libs.firebase.storage)
     testImplementation(libs.junit)
     implementation ("com.airbnb.android:lottie:5.2.0")
     androidTestImplementation(libs.ext.junit)
@@ -75,6 +78,11 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.google.firebase:firebase-database:20.2.2")
+
+
+
+
+
 
 
 }
