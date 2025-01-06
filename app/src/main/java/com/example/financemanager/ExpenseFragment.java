@@ -75,14 +75,24 @@ public class ExpenseFragment extends Fragment {
         loadingDialog = new CustomLoadingDialog(getContext());
 
         // Set up ArrayAdapter for categorySpinner
-        ArrayAdapter<CharSequence> categoryAdapter = ArrayAdapter.createFromResource(
-                requireContext(),
-                R.array.category_array, // Use a different array for expense categories
-                android.R.layout.simple_spinner_item
-        );
-        categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        categorySpinner.setAdapter(categoryAdapter);
+        String[] categoryArray = {
+                "Other", "Food", "Transport", "Shopping", "Entertainment",
+                "Health", "Education", "Bills", "Investments", "Rent",
+                "Taxes", "Insurance", "Money Transfer"
+        };
 
+// Step 2: Create an ArrayAdapter using the category array
+        ArrayAdapter<String> categoryAdapter = new ArrayAdapter<>(
+                requireContext(),
+                android.R.layout.simple_spinner_item,
+                categoryArray
+        );
+
+// Step 3: Set the layout for the dropdown items
+        categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+// Step 4: Attach the adapter to the Spinner
+        categorySpinner.setAdapter(categoryAdapter);
         // Set up ArrayAdapter for paymentModeSpinner
         ArrayAdapter<CharSequence> paymentModeAdapter = ArrayAdapter.createFromResource(
                 requireContext(),

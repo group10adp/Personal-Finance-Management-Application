@@ -1,5 +1,6 @@
 package com.example.financemanager;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.app.Dialog;
 import android.os.Bundle;
@@ -14,6 +15,7 @@ import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.firestore.CollectionReference;
@@ -34,7 +36,7 @@ public class BudgetSetupActivity extends AppCompatActivity {
     private Calendar calendar;
     private boolean isYearlySelected = false; // Default to Monthly
     private String selectedDateValue; // Stores the selected month/year value
-    Button joinBudgetTextView;
+    Button joinBudgetTextView,aiBudgetTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +61,27 @@ public class BudgetSetupActivity extends AppCompatActivity {
         setupToggleButtons();
 
         joinBudgetTextView = findViewById(R.id.join_budget);
+        aiBudgetTextView = findViewById(R.id.ai_budget);
+
+        aiBudgetTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog progressDialog = new AlertDialog.Builder(BudgetSetupActivity.this)
+                        .setView(R.layout.custom_loading_dialog) // Reference your custom layout
+                        .setCancelable(false)
+                        .create();
+
+                // Start the next activity
+                Intent intent = new Intent(BudgetSetupActivity.this, AiBudgetActivity.class);
+                // Pass a flag to indicate a loading operation is ongoing
+                intent.putExtra("showLoading", true);
+                startActivity(intent);
+
+                // Finish the current activity
+                finish();
+            }
+        });
+
         joinBudgetTextView.setOnClickListener(v -> showJoinBudgetDialog());
 
         // Set a click listener on the "Budget for" section to show a picker dialog
@@ -281,4 +304,6 @@ public class BudgetSetupActivity extends AppCompatActivity {
         String budgetLimit = budgetLimitInput.getText().toString().trim();
         nextButton.setEnabled(!budgetLimit.isEmpty());
     }
+
+
 }
