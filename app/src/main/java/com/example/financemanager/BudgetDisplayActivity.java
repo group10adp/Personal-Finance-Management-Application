@@ -66,7 +66,14 @@ public class BudgetDisplayActivity extends AppCompatActivity {
         month = intent.getStringExtra("selectedDateValue");
 
         auth = FirebaseAuth.getInstance();
-        userId = String.valueOf(auth.getCurrentUser().getUid());
+        userId = intent.getStringExtra("userId"); // Get userId from the intent
+        //Log.d("userId66","jjjj");
+        auth = FirebaseAuth.getInstance();
+
+// Check if userId is provided via intent
+        if (userId == null || userId.isEmpty()) {
+            userId = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : null;
+        }
         year = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
 //        month = String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1);
 
@@ -393,7 +400,6 @@ public class BudgetDisplayActivity extends AppCompatActivity {
     }
 
 
-
     private void updateCategoryPieChart(Map<String, Double> categoryTotals) {
         ArrayList<PieEntry> pieEntries = new ArrayList<>();
         List<LegendItem> legendItems = new ArrayList<>();
@@ -506,7 +512,6 @@ public class BudgetDisplayActivity extends AppCompatActivity {
                 int index = (int) value;
                 if (index >= 0 && index < categoryLabels.size()) {
 
-                    Log.d("halleluia",""+index);
                     return categoryLabels.get(index);
                 }
                 return "";

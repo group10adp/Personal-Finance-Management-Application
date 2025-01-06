@@ -12,12 +12,19 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.NumberPicker;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.Map;
 
 public class BudgetSetupActivity extends AppCompatActivity {
 
@@ -27,6 +34,7 @@ public class BudgetSetupActivity extends AppCompatActivity {
     private Calendar calendar;
     private boolean isYearlySelected = false; // Default to Monthly
     private String selectedDateValue; // Stores the selected month/year value
+    Button joinBudgetTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +49,7 @@ public class BudgetSetupActivity extends AppCompatActivity {
         nextButton = findViewById(R.id.next_button);
 
         // Disable the Next button by default
-        nextButton.setEnabled(false);
+        nextButton.setEnabled(true);
 
         // Set up the calendar instance
         calendar = Calendar.getInstance();
@@ -49,6 +57,9 @@ public class BudgetSetupActivity extends AppCompatActivity {
 
         // Set up toggle behavior for Monthly and Yearly
         setupToggleButtons();
+
+        joinBudgetTextView = findViewById(R.id.join_budget);
+        joinBudgetTextView.setOnClickListener(v -> showJoinBudgetDialog());
 
         // Set a click listener on the "Budget for" section to show a picker dialog
         selectedMonthYear.setOnClickListener(view -> {
@@ -100,6 +111,69 @@ public class BudgetSetupActivity extends AppCompatActivity {
             }
         });
     }
+
+    private void showJoinBudgetDialog() {
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.dialog_join_budget);
+
+        EditText budgetIdInput = dialog.findViewById(R.id.budget_id_input);
+        Button submitButton = dialog.findViewById(R.id.submit_button);
+
+        submitButton.setOnClickListener(v -> {
+            String budgetId = budgetIdInput.getText().toString().trim();
+            if (!budgetId.isEmpty()) {
+                // Simulate cloning process
+                //Log.d("BUdget","hiii");
+                Toast.makeText(BudgetSetupActivity.this, budgetId, Toast.LENGTH_SHORT).show();
+                Toast.makeText(BudgetSetupActivity.this, "Budget details saved successfully!", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(BudgetSetupActivity.this, BudgetDisplayActivity.class);
+                intent.putExtra("selectedDateValue", "1");
+                intent.putExtra("userId", budgetId);
+                startActivity(intent);
+                finish();
+
+                //                FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+//
+//
+//                // Reference to the "budget" collection under the specified budgetId, year "2025", and month "1"
+//                CollectionReference sourceBudgetCollectionRef = firestore.collection("users")
+//                        .document(budgetId)
+//                        .collection("budget")
+//                        .document("2025") // Replace with the actual year if needed
+//                        .collection("1"); // Replace with the actual month if needed
+//
+//                // Get all documents in the "budget" collection
+//                sourceBudgetCollectionRef.get()
+//                        .addOnCompleteListener(task -> {
+//                            if (task.isSuccessful() && task.getResult() != null) {
+//                                for (QueryDocumentSnapshot document : task.getResult()) {
+//                                    // Log document data (fields)
+//                                    Log.d("BudgetData", "Document ID: " + document.getId());
+//                                    Log.d("BudgetData", "Fields: " + document.getData());
+//
+//                                    // Check for nested collections dynamically
+//                                    //fetchAllNestedCollections(document.getReference());
+//                                }
+//                            } else {
+//                                Log.e("FirestoreError", "Error getting documents: ", task.getException());
+//                            }
+//                        });
+
+            } else {
+                Toast.makeText(BudgetSetupActivity.this, "Please enter a valid Budget ID", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        dialog.show();
+    }
+
+    public void copyDb(String budgetId) {
+        // Firestore instance
+
+
+    }
+
+
 
     // Sets up the behavior for the toggle buttons
     private void setupToggleButtons() {

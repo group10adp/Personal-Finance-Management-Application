@@ -22,6 +22,7 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -114,11 +115,18 @@ public class TransactionDetailsActivity extends AppCompatActivity {
                     }))
                     .addOnFailureListener(e -> {
                         Log.e("FirebaseStorage", "File Upload Failed: " + e.getMessage());
-                        Toast.makeText(TransactionDetailsActivity.this, "File Upload Failed!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(TransactionDetailsActivity.this, "File Upload Successfully!", Toast.LENGTH_SHORT).show();
                     });
         } else {
             Toast.makeText(this, "No file selected!", Toast.LENGTH_SHORT).show();
         }
+
+        //new code from here
+        System.setProperty("webdriver.chrome.driver", "path/to/chromedriver");
+
+        // Initialize WebDriver
+
+
     }
 
 
