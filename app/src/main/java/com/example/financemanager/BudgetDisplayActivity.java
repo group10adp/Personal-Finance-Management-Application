@@ -2,10 +2,14 @@ package com.example.financemanager;
 
 import static java.security.AccessController.getContext;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -55,6 +59,7 @@ public class BudgetDisplayActivity extends AppCompatActivity {
     private DocumentReference totalIncomeRef, totalExpenseRef;
     PieChart pieChart;
     BarChart barChart;
+    Button copy_code;
     private double totalIncome = 0.0, totalExpense = 0.0;
 
     @Override
@@ -87,6 +92,22 @@ public class BudgetDisplayActivity extends AppCompatActivity {
         donutProgress = findViewById(R.id.donutProgress);
         monthYear = findViewById(R.id.tv_month_year);
         tv_remark=findViewById(R.id.tv_remark);
+
+        copy_code=findViewById(R.id.copy_code);
+
+        copy_code.setOnClickListener(v -> {
+            if (userId != null && !userId.isEmpty()) {
+                // Copy the userId to clipboard
+                ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText("User ID", userId);
+                clipboard.setPrimaryClip(clip);
+
+                // Show a Toast to inform the user
+                Toast.makeText(this, "Budget code copied to clipboard!", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "User ID not found!", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         if(year.equals(month)){
             totalIncomeRef = firestore.collection("users").document(userId)
@@ -461,7 +482,6 @@ public class BudgetDisplayActivity extends AppCompatActivity {
         ArrayList<BarEntry> entries = new ArrayList<>();
         ArrayList<String> categoryLabels = new ArrayList<>();
 
-
         int colorIndex = 0;
         for (Map.Entry<String, Double> entry : categoryIncome.entrySet()) {
             if (entry.getKey() == null || entry.getKey().isEmpty()) {
@@ -473,10 +493,6 @@ public class BudgetDisplayActivity extends AppCompatActivity {
             categoryLabels.add(entry.getKey());
             colorIndex++;
         }
-
-
-
-
 
         // Bar chart dataset
         BarDataSet barDataSet = new BarDataSet(entries, "Category-wise Income");
@@ -491,7 +507,7 @@ public class BudgetDisplayActivity extends AppCompatActivity {
         barDataSet.setValueTextSize(12f);
 
         BarData barData = new BarData(barDataSet);
-        barData.setBarWidth(0.3f); // Bar width
+        barData.setBarWidth(0.4f); // Bar width
 
         // Configure the BarChart
         barChart.setData(barData);
@@ -501,9 +517,7 @@ public class BudgetDisplayActivity extends AppCompatActivity {
 
         // Customize X-axis
         XAxis xAxis = barChart.getXAxis();
-        xAxis.setGranularity(1f); // Ensure each label corresponds to an entry
-        xAxis.setGranularityEnabled(true); // Enforce granularity
-        xAxis.setLabelCount(categoryLabels.size(), true); // Show all labels
+        xAxis.setGranularity(1f);
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setDrawGridLines(false); // Hide vertical grid lines
         xAxis.setValueFormatter(new ValueFormatter() {
@@ -511,14 +525,13 @@ public class BudgetDisplayActivity extends AppCompatActivity {
             public String getFormattedValue(float value) {
                 int index = (int) value;
                 if (index >= 0 && index < categoryLabels.size()) {
-
-                    return categoryLabels.get(index);
+                    return categoryLabels.get(index); // Show category name
                 }
                 return "";
             }
         });
-        xAxis.setLabelRotationAngle(-90f); // Rotate labels for better visibility
-        barChart.setExtraBottomOffset(50f); // Ensure labels aren't cut off
+        xAxis.setLabelRotationAngle(-90f);
+        barChart.setExtraBottomOffset(55f);
 
         // Customize Y-axis
         YAxis leftAxis = barChart.getAxisLeft();

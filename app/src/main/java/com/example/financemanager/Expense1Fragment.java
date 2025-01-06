@@ -401,8 +401,8 @@ public class Expense1Fragment extends Fragment {
                 return "";
             }
         });
-        xAxis.setLabelRotationAngle(-55f);
-        barChart.setExtraBottomOffset(50f);
+        xAxis.setLabelRotationAngle(-90f);
+        barChart.setExtraBottomOffset(55f);
 
         // Customize Y-axis
         YAxis leftAxis = barChart.getAxisLeft();

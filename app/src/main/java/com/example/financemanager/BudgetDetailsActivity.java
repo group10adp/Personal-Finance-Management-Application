@@ -1,5 +1,6 @@
 package com.example.financemanager;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -30,7 +31,7 @@ public class BudgetDetailsActivity extends AppCompatActivity {
     Button saveButton;
     double totalBudget, remainingBudget;
     FirebaseFirestore firestore;
-    String userId, year, month;
+    String userId, year, month,month1;
     FirebaseAuth auth;
     private DocumentReference totalIncomeRef, totalExpenseRef;
     private double totalIncome = 0.0, totalExpense = 0.0;
@@ -62,6 +63,12 @@ public class BudgetDetailsActivity extends AppCompatActivity {
         year = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
         //month = String.valueOf(Calendar.getInstance().get(Calendar.MONTH)+1);
 
+
+        if(month.equals(year)){
+            month1=String.valueOf(Calendar.getInstance().get(Calendar.MONTH)+1);
+        }else{
+            month1=month;
+        }
 
         totalBudgetTextView.setText("₹" + totalBudget);
         remainingBudgetTextView.setText("₹" + remainingBudget);
@@ -148,66 +155,75 @@ public class BudgetDetailsActivity extends AppCompatActivity {
     }
 
     // Method to save budget data to Firestore
+
     private void saveBudgetData() {
         double totalamount = totalBudget;
 
         totalExpenseRef = firestore.collection("users").document(userId)
                 .collection("expense")
-                .document(String.valueOf(year))
-                .collection(month)
+                .document(year)
+                .collection(month1)
                 .document("totalExpense");
 
         totalExpenseRef.get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                DocumentSnapshot documentSnapshot = task.getResult();
-
-                totalExpense = documentSnapshot != null && documentSnapshot.contains("total")
-                        ? documentSnapshot.getDouble("total")
+            if (task.isSuccessful() && task.getResult() != null) {
+                    DocumentSnapshot documentSnapshot = task.getResult();
+                    totalExpense = documentSnapshot.contains("total")
+                            ? documentSnapshot.getDouble("total")
                         : 0.0;
 
-                    firestore.collection("users")
-                            .document(userId)
-                            .collection("budget")
-                            .document(year)
-                            .collection(month)
-                            .document("total-budget") // Document ID for total budget
-                            .set(new TotalBudgetEntry(totalamount))  // TotalBudgetEntry is a custom class to store the total amount
-                            .addOnSuccessListener(aVoid -> {
-                                //Toast.makeText(BudgetDetailsActivity.this, "Total budget saved successfully!", Toast.LENGTH_SHORT).show();
-                            })
-                            .addOnFailureListener(e -> {
-                                Toast.makeText(BudgetDetailsActivity.this, "Failed to save total budget.", Toast.LENGTH_SHORT).show();
-                            });
+                double remainingBudget = totalBudget - totalExpense;
 
+                saveTotalBudget(totalBudget);
+                saveRemainingBudget(remainingBudget);
 
-                    firestore.collection("users")
-                            .document(userId)
-                            .collection("budget")
-                            .document(year)
-                            .collection(month)
-                            .document("total-remaining-budget") // Document ID for total budget
-                            .set(new TotalBudgetEntry(totalamount-totalExpense))  // TotalBudgetEntry is a custom class to store the total amount
-                            .addOnSuccessListener(aVoid -> {
-                                //Toast.makeText(BudgetDetailsActivity.this, "Total budget saved successfully!", Toast.LENGTH_SHORT).show();
-                            })
-                            .addOnFailureListener(e -> {
-                                Toast.makeText(BudgetDetailsActivity.this, "Failed to save total budget.", Toast.LENGTH_SHORT).show();
-                            });
+                realtimeDatabase.child(userId).child(month)
+                        .setValue(month)
+                        .addOnSuccessListener(aVoid -> Log.d("RealtimeDB", "Month value saved successfully."))
+                        .addOnFailureListener(e -> Log.e("RealtimeDB", "Failed to save month value.", e));
 
-                    realtimeDatabase.child("budget").child(month)
-                            .setValue(month)
-                            .addOnSuccessListener(aVoid -> Log.d("RealtimeDB", "Month value saved successfully."))
-                            .addOnFailureListener(e -> Log.e("RealtimeDB", "Failed to save month value.", e));
 
             } else {
-
+                Log.e("FirestoreError", "Failed to fetch totalExpense", task.getException());
+                Toast.makeText(this, "Failed to retrieve expense data.", Toast.LENGTH_SHORT).show();
             }
         });
 
+        saveCategoryBudgets();
+        navigateToBudgetDisplay();
+    }
 
+    private void saveTotalBudget(double totalamount) {
+        firestore.collection("users")
+                .document(userId)
+                .collection("budget")
+                .document(year)
+                .collection(month)
+                .document("total-budget")
+                .set(new TotalBudgetEntry(totalamount)) // Replace with your custom class
+                .addOnSuccessListener(aVoid -> Log.d("Firestore", "Total budget saved successfully."))
+                .addOnFailureListener(e -> {
+                    Log.e("FirestoreError", "Failed to save total budget", e);
+                    Toast.makeText(this, "Failed to save total budget.", Toast.LENGTH_SHORT).show();
+                });
+    }
 
+    private void saveRemainingBudget(double remainingBudget) {
+        firestore.collection("users")
+                .document(userId)
+                .collection("budget")
+                .document(year)
+                .collection(month)
+                .document("total-remaining-budget")
+                .set(new TotalBudgetEntry(remainingBudget)) // Replace with your custom class
+                .addOnSuccessListener(aVoid -> Log.d("Firestore", "Remaining budget saved successfully."))
+                .addOnFailureListener(e -> {
+                    Log.e("FirestoreError", "Failed to save remaining budget", e);
+                    Toast.makeText(this, "Failed to save remaining budget.", Toast.LENGTH_SHORT).show();
+                });
+    }
 
-        // Create a BudgetEntry object for each category
+    private void saveCategoryBudgets() {
         saveCategoryData(categoryInputOthers, "Others");
         saveCategoryData(categoryInputTransport, "Transport");
         saveCategoryData(categoryInputShopping, "Shopping");
@@ -220,13 +236,17 @@ public class BudgetDetailsActivity extends AppCompatActivity {
         saveCategoryData(categoryInputTax, "Tax");
         saveCategoryData(categoryInputInsurance, "Insurance");
         saveCategoryData(categoryInputMoneyTransfer, "Money Transfer");
+    }
 
-        Toast.makeText(BudgetDetailsActivity.this, "Budget details saved successfully!", Toast.LENGTH_SHORT).show();
+    private void navigateToBudgetDisplay() {
+        Toast.makeText(this, "Budget details saved successfully!", Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(BudgetDetailsActivity.this, BudgetDisplayActivity.class);
         intent.putExtra("selectedDateValue", month);
+        intent.putExtra("userId", userId);
         startActivity(intent);
         finish();
     }
+
 
     // Helper method to save data for each category
     private void saveCategoryData(EditText editText, String category) {

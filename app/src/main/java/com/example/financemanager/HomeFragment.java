@@ -14,12 +14,18 @@ import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -36,7 +42,7 @@ import java.util.List;
 
 public class HomeFragment extends Fragment {
 
-    private TextView incomeTextView, expenseTextView, balanceTextView, time_of_day;
+    private TextView incomeTextView, expenseTextView, balanceTextView, time_of_day,username;
     private LinearLayout incomeLayout, spendingLayout; // Added spendingLayout for Spending section click
     private FirebaseFirestore firestore;
     private DocumentReference totalIncomeRef, totalExpenseRef, totalIncomeRef1, totalExpenseRef1;
@@ -79,12 +85,35 @@ public class HomeFragment extends Fragment {
         TextView seeall =view.findViewById(R.id.tv_see_all);
         Button manageBudgetButton = view.findViewById(R.id.manageBudgetButton);
 
+        username=view.findViewById(R.id.username);
         profile = view.findViewById(R.id.profile);
         incomeLayout = view.findViewById(R.id.incomeLayout); // Income layout reference
         spendingLayout = view.findViewById(R.id.spendingLayout); // Spending layout reference
 
         // Initialize Firebase Firestore instance
+        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(userId);
 
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    // Retrieve the first (and only) key under this userId
+                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                        String key = snapshot.getKey(); // Get the key
+                        //Log.d("RealtimeDB1", "Key retrieved: " + key);
+                        username.setText(key);
+                        break; // Since there's only one key, exit the loop
+                    }
+                } else {
+                    Log.e("RealtimeDB", "No data found for the given user ID.");
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("RealtimeDB", "Database error: " + databaseError.getMessage());
+            }
+        });
         firestore = FirebaseFirestore.getInstance();
         int currentYear = Calendar.getInstance().get(Calendar.YEAR);
 

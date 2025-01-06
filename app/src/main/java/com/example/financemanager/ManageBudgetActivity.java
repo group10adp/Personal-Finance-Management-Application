@@ -27,6 +27,7 @@ public class ManageBudgetActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private BudgetAdapter adapter;
     private List<Budget> budgets;
+    String userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,8 +35,8 @@ public class ManageBudgetActivity extends AppCompatActivity {
         setContentView(R.layout.activity_manage_budget);
 
         auth = FirebaseAuth.getInstance();
-        String userId = auth.getCurrentUser().getUid();
-        realtimeDatabase = FirebaseDatabase.getInstance().getReference("budget");
+        userId = String.valueOf(auth.getCurrentUser().getUid());
+        realtimeDatabase = FirebaseDatabase.getInstance().getReference(userId);
 
         // Initialize RecyclerView
         recyclerView = findViewById(R.id.recyclerViewBudgets);
@@ -71,6 +72,9 @@ public class ManageBudgetActivity extends AppCompatActivity {
             }
         });
     }
+
+
+
 
     private String formatMonthOrYear(String monthYear) {
         try {

@@ -252,5 +252,18 @@ android:id="@+id/main">
 
     <!-- Other CardViews for PieChart and BarChart -->
 <!-- Existing code remains unchanged -->
+
+    <Button
+        android:id="@+id/copy_code"
+        android:layout_width="match_parent"
+        android:textSize="17dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginBottom="16dp"
+        android:text="Copy budget code"
+        android:textColor="@android:color/white"
+        android:backgroundTint="#282424" />
 </LinearLayout>
 </ScrollView>

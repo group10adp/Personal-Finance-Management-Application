@@ -29,12 +29,13 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class SignUp extends AppCompatActivity {
 
-    EditText editTextEmail, editTextPassword, confrimPassword;
+    EditText editTextEmail, editTextPassword, confrimPassword,name;
     Button btnSignup;
     FirebaseAuth mAuth;
     ProgressBar progressBar;
-    TextView textView,name;
+    TextView textView;
     String password;
+    DatabaseReference realtimeDatabase;
 
     private DatabaseReference database;
     private FirebaseAuth auth;
@@ -69,6 +70,8 @@ public class SignUp extends AppCompatActivity {
         auth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance().getReference();
 
+        realtimeDatabase = FirebaseDatabase.getInstance().getReference();
+
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -82,8 +85,9 @@ public class SignUp extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 progressBar.setVisibility(View.VISIBLE);
-                String email;
+                String email,name1;
                 email = editTextEmail.getText().toString();
+                name1=name.getText().toString();
                 if (editTextPassword.getText().toString().equals(confrimPassword.getText().toString())) {
                     password = editTextPassword.getText().toString();
 //                    String pass =editTextPassword.getText().toString();
@@ -125,6 +129,8 @@ public class SignUp extends AppCompatActivity {
                                 if (task.isSuccessful()) {
 
                                     FirebaseUser user = mAuth.getCurrentUser();
+                                    String userId = user.getUid();
+                                    pushNameToFirebase(userId,name1);
                                     user.sendEmailVerification().addOnSuccessListener(new OnSuccessListener<Void>() {
                                         @Override
                                         public void onSuccess(Void unused) {
@@ -155,13 +161,11 @@ public class SignUp extends AppCompatActivity {
 
     }
 
-    private void pushNameToFirebase(String name) {
+    private void pushNameToFirebase(String userId,String name) {
         // Get the current user's ID (userId)
-        String userId = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : null;
-
         if (userId != null) {
 
-            DatabaseReference userRef = database.child("Enduser").child(userId).child("name");
+            DatabaseReference userRef = database.child("users").child(userId).child(name);
 
             // Push the name to Firebase
             userRef.setValue(name).addOnSuccessListener(aVoid -> {

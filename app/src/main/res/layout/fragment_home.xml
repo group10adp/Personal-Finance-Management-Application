@@ -34,6 +34,7 @@
 
                 <!-- Second TextView for the name -->
                 <TextView
+                    android:id="@+id/username"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Parthib"
