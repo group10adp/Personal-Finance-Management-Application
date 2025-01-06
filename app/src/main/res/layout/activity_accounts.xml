@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:id="@+id/main"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+android:background="#F8F5F7"
+tools:context=".AccountsActivity">
+
+<!-- Heading for Username -->
+<TextView
+    android:id="@+id/username_heading"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:text="Your User name"
+    android:textStyle="bold"
+    android:textSize="14sp"
+    android:textColor="#000000"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    android:layout_marginTop="45dp"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp" />
+
+<!-- Display Username -->
+<TextView
+    android:id="@+id/username"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:text="Your Name"
+    android:textSize="16sp"
+    android:textColor="#000000"
+    app:layout_constraintTop_toBottomOf="@id/username_heading"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    android:layout_marginTop="8dp"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp" />
+
+<!-- Change Password Text Field -->
+<EditText
+    android:id="@+id/edit_password"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:hint="New Password"
+    android:inputType="textPassword"
+    android:background="@android:color/transparent"
+    android:textSize="16sp"
+    android:padding="8dp"
+    app:layout_constraintTop_toBottomOf="@id/username"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    android:layout_marginTop="24dp"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp" />
+
+<!-- Divider Below New Password -->
+<View
+    android:layout_width="0dp"
+    android:layout_height="1dp"
+    android:background="#D3D3D3"
+    app:layout_constraintTop_toBottomOf="@id/edit_password"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    android:layout_marginTop="4dp"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp" />
+
+<!-- Confirm Password Text Field -->
+<EditText
+    android:id="@+id/confirm_password"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:hint="Confirm Password"
+    android:inputType="textPassword"
+    android:background="@android:color/transparent"
+    android:textSize="16sp"
+    android:padding="8dp"
+    app:layout_constraintTop_toBottomOf="@id/edit_password"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    android:layout_marginTop="24dp"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp" />
+
+<!-- Divider Below Confirm Password -->
+<View
+    android:layout_width="0dp"
+    android:layout_height="1dp"
+    android:background="#D3D3D3"
+    app:layout_constraintTop_toBottomOf="@id/confirm_password"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    android:layout_marginTop="4dp"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp" />
+
+<!-- Save Button -->
+<Button
+    android:id="@+id/save_button"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:text="Save"
+    android:backgroundTint="#000000"
+    android:textColor="#FFFFFF"
+    app:layout_constraintTop_toBottomOf="@id/confirm_password"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    android:layout_marginTop="32dp"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp" />
+
+<!-- Logout Button -->
+<Button
+    android:id="@+id/logout_button"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:text="Logout"
+    android:backgroundTint="#EB4A4A"
+    android:textColor="#000000"
+
+    android:strokeColor="#000000"
+    app:layout_constraintTop_toBottomOf="@id/save_button"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    android:layout_marginTop="16dp"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp" />
+
+<!-- App Version at Bottom -->
+<TextView
+    android:id="@+id/app_version"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Version 1.0.0"
+    android:textSize="20sp"
+    android:textColor="#383737"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    android:layout_marginBottom="16dp" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+
+

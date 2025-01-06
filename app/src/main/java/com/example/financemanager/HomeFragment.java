@@ -140,11 +140,11 @@ public class HomeFragment extends Fragment {
 
         // Set up profile click listener
         profile.setOnClickListener(v -> {
-            FirebaseAuth.getInstance().signOut();
-            Intent intent = new Intent(getActivity(), Login.class);
+            // Open a new activity instead of logging out
+            Intent intent = new Intent(getActivity(), ProfileActivity.class);
             startActivity(intent);
-            getActivity().finish();
         });
+
 
         // Set up income layout click listener
         seeall.setOnClickListener(v -> {
