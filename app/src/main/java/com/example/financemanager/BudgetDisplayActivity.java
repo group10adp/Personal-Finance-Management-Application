@@ -300,7 +300,7 @@ public class BudgetDisplayActivity extends AppCompatActivity {
             return monthNames[month - 1] + " " + year;
         }
         catch (Exception e){
-            return year+"";
+            return month+"";
         }
 
     }

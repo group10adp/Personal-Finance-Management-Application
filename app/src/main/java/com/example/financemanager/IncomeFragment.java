@@ -80,12 +80,21 @@ public class IncomeFragment extends Fragment {
 
 
         // Set up ArrayAdapter for categorySpinner
-        ArrayAdapter<CharSequence> categoryAdapter = ArrayAdapter.createFromResource(
+        String[] categoryArray = {
+                "Others", "Salary", "Sold Items", "Coupons"
+        };
+
+// Step 2: Create an ArrayAdapter using the category array
+        ArrayAdapter<String> categoryAdapter = new ArrayAdapter<>(
                 requireContext(),
-                R.array.category_array, // Use a different array for income categories
-                android.R.layout.simple_spinner_item
+                android.R.layout.simple_spinner_item,
+                categoryArray
         );
+
+// Step 3: Set the layout for the dropdown items
         categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+// Step 4: Attach the adapter to the Spinner
         categorySpinner.setAdapter(categoryAdapter);
 
         // Set up ArrayAdapter for paymentModeSpinner
@@ -107,7 +116,7 @@ public class IncomeFragment extends Fragment {
             loadingDialog.show();
 
             // Simulate saving operation or dismiss dialog after completion
-            new Handler().postDelayed(() -> loadingDialog.dismiss(), 2000); // Dismiss after 2 seconds (example)
+            new Handler().postDelayed(() -> loadingDialog.dismiss(), 2500); // Dismiss after 2 seconds (example)
         });
 
         return view;
@@ -127,7 +136,7 @@ public class IncomeFragment extends Fragment {
             // Get current year and month
             String[] dateParts = date.split(" ");
             String year = dateParts[2];
-            String month = String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1); // Get the current month in MM format
+            String month = getMonthNumber(dateParts[1]); // Get the current month in MM format
 
             // Create an IncomeEntry object
             IncomeEntry incomeEntry = new IncomeEntry(amount, date, time, category, paymentMode,note);
@@ -248,6 +257,18 @@ public class IncomeFragment extends Fragment {
                 year, month, day);
 
         datePickerDialog.show();
+    }
+
+    private String getMonthNumber(String monthName) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("MMM", Locale.ENGLISH); // "MMM" is for short month names
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(sdf.parse(monthName)); // Parse month name
+            return String.valueOf(cal.get(Calendar.MONTH) + 1); // Calendar months are 0-indexed, so add 1
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "1"; // Return -1 in case of an error
+        }
     }
 
     // Inner class for IncomeEntry
