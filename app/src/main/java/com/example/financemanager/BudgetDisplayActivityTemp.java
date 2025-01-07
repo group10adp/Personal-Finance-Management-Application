@@ -38,6 +38,8 @@ import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -52,11 +54,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class BudgetDisplayActivity extends AppCompatActivity {
+public class BudgetDisplayActivityTemp extends AppCompatActivity {
 
     private FirebaseFirestore firestore;
     private TextView budgetTextView, remainingTextView, spentTextView, monthYear,tv_remark;
-    String userId, year, month;
+    String userId,actuser, year, month;
     FirebaseAuth auth;
     private DonutProgress donutProgress;
     private DocumentReference totalIncomeRef, totalExpenseRef;
@@ -64,10 +66,10 @@ public class BudgetDisplayActivity extends AppCompatActivity {
     BarChart barChart;
     Button copy_code;
     private double totalIncome = 0.0, totalExpense = 0.0;
-    double totalBudget1;
 
     private ShimmerFrameLayout shimmerLayout;
     private View mainContent;
+    DatabaseReference realtimeDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,16 +80,15 @@ public class BudgetDisplayActivity extends AppCompatActivity {
         month = intent.getStringExtra("selectedDateValue");
 
         auth = FirebaseAuth.getInstance();
-        userId = intent.getStringExtra("userId");
-        userId = intent.getStringExtra("userId");// Get userId from the intent
+        userId = intent.getStringExtra("userId"); // Get userId from the intent
 
-        totalBudget1= intent.getDoubleExtra("budget",0.0);
         auth = FirebaseAuth.getInstance();
 
 // Check if userId is provided via intent
-        if (userId == null || userId.isEmpty()) {
-            userId = auth.getCurrentUser() != null ? auth.getCurrentUser().getUid() : null;
-        }
+
+        actuser = auth.getCurrentUser().getUid();
+        realtimeDatabase = FirebaseDatabase.getInstance().getReference();
+
         year = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
 //        month = String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1);
 
@@ -103,7 +104,7 @@ public class BudgetDisplayActivity extends AppCompatActivity {
             shimmerLayout.stopShimmer();
             shimmerLayout.setVisibility(View.GONE);
             mainContent.setVisibility(View.VISIBLE);
-        }, 3500); // Simulated delay of 3 seconds
+        }, 3000); // Simulated delay of 3 seconds
 
         pieChart = findViewById(R.id.pieChart);
         barChart = findViewById(R.id.barChart);
@@ -160,7 +161,7 @@ public class BudgetDisplayActivity extends AppCompatActivity {
         }
 
 
-        fetchBudgetDetails(userId);
+        fetchBudgetDetails(userId, year);
         fetchTotalExpenseIncome();
 
         ArrayList<PieEntry> pieEntries = new ArrayList<>();
@@ -244,7 +245,7 @@ public class BudgetDisplayActivity extends AppCompatActivity {
 
     }
 
-    private void fetchBudgetDetails(String userId) {
+    private void fetchBudgetDetails(String userId, String year) {
 
         // Fetch total budget
         firestore.collection("users")
@@ -255,65 +256,71 @@ public class BudgetDisplayActivity extends AppCompatActivity {
                 .document("total-budget")
                 .get()
                 .addOnSuccessListener(totalBudgetSnapshot -> {
-                    double totalBudget = totalBudgetSnapshot.contains("amount") && totalBudgetSnapshot.getDouble("amount") != null
-                            ? totalBudgetSnapshot.getDouble("amount")
-                            : totalBudget1;
+                    double totalBudget = totalBudgetSnapshot.getDouble("amount");
 
 
+                    // Fetch remaining budget
+                    firestore.collection("users")
+                            .document(userId)
+                            .collection("budget")
+                            .document(year)
+                            .collection(month)
+                            .document("total-remaining-budget")
+                            .get()
+                            .addOnSuccessListener(remainingBudgetSnapshot -> {
+                                if (remainingBudgetSnapshot.exists()) {
+                                    double remainingBudget = remainingBudgetSnapshot.getDouble("amount");
 
-                        // Fetch remaining budget
-                        firestore.collection("users")
-                                .document(userId)
-                                .collection("budget")
-                                .document(year)
-                                .collection(month)
-                                .document("total-remaining-budget")
-                                .get()
-                                .addOnSuccessListener(remainingBudgetSnapshot -> {
-                                    if (remainingBudgetSnapshot.exists()) {
-                                        double remainingBudget = remainingBudgetSnapshot.getDouble("amount");
+                                    // Calculate the percentage
+                                    double percentageRemaining = (remainingBudget / totalBudget) * 100;
+                                    percentageRemaining = 100 - percentageRemaining;
+                                    String formattedPercentage = String.format("%.1f%%", percentageRemaining);
+                                    donutProgress.setStartingDegree(270);
+                                    donutProgress.setProgress((float) percentageRemaining);
+                                    donutProgress.setText(formattedPercentage);
 
-                                        // Calculate the percentage
-                                        double percentageRemaining = (remainingBudget / totalBudget) * 100;
-                                        percentageRemaining = 100 - percentageRemaining;
-                                        String formattedPercentage = String.format("%.1f%%", percentageRemaining);
-                                        donutProgress.setStartingDegree(270);
-                                        donutProgress.setProgress((float) percentageRemaining);
-                                        donutProgress.setText(formattedPercentage);
+                                    String message;
 
-                                        String message;
-
-                                        if (percentageRemaining > 100) {
-                                            message = "Alert! You've reached your budget limit.";
-                                            tv_remark.setText(message);
-                                            tv_remark.setTextColor(Color.parseColor("#FF0000")); // Red color for alert (hex code)
-                                        } else if (percentageRemaining > 50) {
-                                            message = "At this rate, you may exceed your budget soon.";
-                                            tv_remark.setText(message);
-                                            tv_remark.setTextColor(Color.parseColor("#FFA500")); // Orange color for warning (hex code)
-                                        } else {
-                                            message = "Great job! You are under your budget.";
-                                            tv_remark.setText(message);
-                                            tv_remark.setTextColor(Color.parseColor("#4CAF50")); // Green color for good progress (hex code)
-                                        }
-
-
-
-                                        // Update UI
-
-                                        budgetTextView.setText(String.format("Budget: ₹%s", totalBudget));
-                                        remainingTextView.setText(String.valueOf(remainingBudget));
-
-                                        // Retrieve and display month and year
-                                        String monthYearText = formatMonthYear(Integer.parseInt(month), Integer.parseInt(year));
-                                        monthYear.setText(monthYearText);
+                                    if (percentageRemaining > 100) {
+                                        message = "Alert! You've reached your budget limit.";
+                                        tv_remark.setText(message);
+                                        tv_remark.setTextColor(Color.parseColor("#FF0000")); // Red color for alert (hex code)
+                                    } else if (percentageRemaining > 50) {
+                                        message = "At this rate, you may exceed your budget soon.";
+                                        tv_remark.setText(message);
+                                        tv_remark.setTextColor(Color.parseColor("#FFA500")); // Orange color for warning (hex code)
                                     } else {
-                                        Toast.makeText(this, "Remaining budget not found!", Toast.LENGTH_SHORT).show();
+                                        message = "Great job! You are under your budget.";
+                                        tv_remark.setText(message);
+                                        tv_remark.setTextColor(Color.parseColor("#4CAF50")); // Green color for good progress (hex code)
                                     }
-                                })
-                                .addOnFailureListener(e -> Toast.makeText(this, "Failed to fetch remaining budget.", Toast.LENGTH_SHORT).show());
+
+
+
+                                    // Update UI
+
+                                    budgetTextView.setText(String.format("Budget: ₹%s", totalBudget));
+                                    remainingTextView.setText(String.valueOf(remainingBudget));
+
+                                    // Retrieve and display month and year
+                                    String monthYearText = formatMonthYear(Integer.parseInt(month), Integer.parseInt(year));
+                                    monthYear.setText(monthYearText);
+
+                                    storeBudgetDetailsForUserActuser(actuser, year, month, totalBudget, remainingBudget);
+                                } else {
+                                    Toast.makeText(this, "Remaining budget not found!", Toast.LENGTH_SHORT).show();
+                                }
+                            })
+                            .addOnFailureListener(e -> Toast.makeText(this, "Failed to fetch remaining budget.", Toast.LENGTH_SHORT).show());
                 })
                 .addOnFailureListener(e -> Toast.makeText(this, "Failed to fetch total budget.", Toast.LENGTH_SHORT).show());
+
+        realtimeDatabase.child(actuser).child(month)
+                .setValue(month)
+                .addOnSuccessListener(aVoid -> Log.d("RealtimeDB", "Month value saved successfully."))
+                .addOnFailureListener(e -> Log.e("RealtimeDB", "Failed to save month value.", e));
+
+
     }
 
     // Utility method to format the month and year
@@ -330,6 +337,33 @@ public class BudgetDisplayActivity extends AppCompatActivity {
         }
 
     }
+
+    private void storeBudgetDetailsForUserActuser(String userActuser, String year, String month, double totalBudget, double remainingBudget) {
+        // Store total budget for userActuser
+        firestore.collection("users")
+                .document(userActuser)  // Using the new user (userActuser)
+                .collection("budget")
+                .document(year)
+                .collection(month)
+                .document("total-budget")
+                .set(new TotalBudgetEntry(totalBudget))  // Use TotalBudgetEntry class for storing the amount
+                .addOnSuccessListener(aVoid -> Log.d("Firestore", "Total budget saved successfully for " + userActuser))
+                .addOnFailureListener(e -> Log.e("FirestoreError", "Failed to save total budget for " + userActuser, e));
+
+        // Store remaining budget for userActuser
+        firestore.collection("users")
+                .document(userActuser)  // Using the new user (userActuser)
+                .collection("budget")
+                .document(year)
+                .collection(month)
+                .document("total-remaining-budget")
+                .set(new TotalBudgetEntry(remainingBudget))  // Use TotalBudgetEntry class for storing the amount
+                .addOnSuccessListener(aVoid -> Log.d("Firestore", "Remaining budget saved successfully for " + userActuser))
+                .addOnFailureListener(e -> Log.e("FirestoreError", "Failed to save remaining budget for " + userActuser, e));
+
+    }
+
+
 
 
 
@@ -389,7 +423,7 @@ public class BudgetDisplayActivity extends AppCompatActivity {
 
                     for (String category : categories) {
                         fetchCategoryData(userId, year, month, category, categoryTotals, () -> {
-                            // Increment the counter and check if all categories are processed
+
                             if (counter.incrementAndGet() == categories.length) {
                                 // All categories processed
                                 Log.d("FinalCategoryTotals", "Category Totals: " + categoryTotals);
@@ -398,6 +432,7 @@ public class BudgetDisplayActivity extends AppCompatActivity {
                                 updateBarChart(barChart, categoryTotals);
                             }
                         });
+                        Log.d("categoryTotals",""+categoryTotals.get(category));
                     }
                 } else {
                     Log.d("CategoryTotals", "No income data found for categories.");
@@ -427,6 +462,7 @@ public class BudgetDisplayActivity extends AppCompatActivity {
                 if (document != null && document.exists()) {
                     // Retrieve the remaining budget for the category
                     Double amount = document.getDouble("amount");
+                    storeCategoryDataForUserActuser(actuser,year,month,category,amount);
                     if (amount != null) {
                         synchronized (categoryTotals) {
                             categoryTotals.put(category, categoryTotals.getOrDefault(category, 0.0) + amount);
@@ -445,6 +481,24 @@ public class BudgetDisplayActivity extends AppCompatActivity {
             onComplete.run();
         });
     }
+
+    private void storeCategoryDataForUserActuser(String userActuser, String year, String month, String category, double remainingBudget) {
+        // Use the category name to dynamically reference the document
+        DocumentReference categoryRef = firestore.collection("users")
+                .document(userActuser)  // Use userActuser instead of userId
+                .collection("budget")
+                .document(year)
+                .collection(month)
+                .document("category-based-remaining-budget")
+                .collection(category)  // Use the category dynamically
+                .document("remaining-budget-entry");
+
+        // Store the remaining budget for the category for userActuser
+        categoryRef.set(new TotalBudgetEntry(remainingBudget))  // Using the TotalBudgetEntry class to store the remaining budget
+                .addOnSuccessListener(aVoid -> Log.d("Firestore", "Category budget saved successfully for " + userActuser + ", Category: " + category))
+                .addOnFailureListener(e -> Log.e("FirestoreError", "Failed to save category budget for " + userActuser + ", Category: " + category, e));
+    }
+
 
 
     private void updateCategoryPieChart(Map<String, Double> categoryTotals) {
@@ -495,7 +549,7 @@ public class BudgetDisplayActivity extends AppCompatActivity {
         RecyclerView legendRecyclerView = findViewById(R.id.legendRecyclerView);
         LegendAdapter legendAdapter = new LegendAdapter(legendItems);
         legendRecyclerView.setAdapter(legendAdapter);
-        legendRecyclerView.setLayoutManager(new GridLayoutManager(BudgetDisplayActivity.this, 1)); // 3 legends per row
+        legendRecyclerView.setLayoutManager(new GridLayoutManager(BudgetDisplayActivityTemp.this, 1)); // 3 legends per row
     }
 
 

@@ -11,10 +11,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.github.lzyzsd.circleprogress.DonutProgress;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.Calendar;
 import java.util.List;
 
 public class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.BudgetViewHolder> {
@@ -46,6 +54,13 @@ public class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.BudgetView
             intent.putExtra("selectedDateValue", budget.getMonthYear());
             context.startActivity(intent);
 
+        });
+
+        holder.itemView.setOnLongClickListener(v -> {
+            // Show a confirmation dialog or a toast for delete option
+            // Show a toast with the document ID
+            showDeleteDialog(holder.itemView.getContext(), budget, position);
+            return true;  // Return true to indicate the long click was handled
         });
     }
 
@@ -88,5 +103,49 @@ public class BudgetAdapter extends RecyclerView.Adapter<BudgetAdapter.BudgetView
                 "July", "August", "September", "October", "November", "December"
         };
         return "Month: "+months[month - 1];
+    }
+
+    private void showDeleteDialog(Context context, Budget budget, int position) {
+        // Create an AlertDialog to confirm deletion
+        new AlertDialog.Builder(context)
+                .setTitle("Delete Budget")
+                .setMessage("Are you sure you want to delete this entry?")
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    // Perform delete action
+                    deleteIncome(budget, position, context);
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> {
+                    // Do nothing, just dismiss the dialog
+                    dialog.dismiss();
+                })
+                .create()
+                .show();
+    }
+
+    private void deleteIncome(Budget budget, int position, Context context) {
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();  // Get the current user ID
+
+        String year = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
+        String month = budget.getMonthYear();
+
+        // Reference to Firebase Realtime Database
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+
+        if (userId != null && month != null) {
+            // Navigate to the user's data and the specific key
+            databaseReference.child(userId).child(month).removeValue()
+                    .addOnSuccessListener(aVoid -> {
+                        // Successfully deleted
+                        Toast.makeText(context, "Budget deleted successfully", Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(e -> {
+                        // Failed to delete
+                        Toast.makeText(context, "Failed to delete the budget", Toast.LENGTH_SHORT).show();
+                    });
+        } else {
+            Toast.makeText(context, "UserId or Key is null", Toast.LENGTH_SHORT).show();
+        }
+
+
     }
 }

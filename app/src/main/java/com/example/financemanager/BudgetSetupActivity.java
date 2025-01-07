@@ -3,6 +3,7 @@ package com.example.financemanager;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.app.Dialog;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -37,11 +38,18 @@ public class BudgetSetupActivity extends AppCompatActivity {
     private boolean isYearlySelected = false; // Default to Monthly
     private String selectedDateValue; // Stores the selected month/year value
     Button joinBudgetTextView,aiBudgetTextView;
+    String month,year;
+
+    FirebaseFirestore firestore;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_budget_setup);
+
+        year = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
+
+        month = String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1);
 
         // Initialize views
         selectedMonthYear = findViewById(R.id.selected_month_year);
@@ -56,6 +64,8 @@ public class BudgetSetupActivity extends AppCompatActivity {
         // Set up the calendar instance
         calendar = Calendar.getInstance();
         updateSelectedMonthYear();
+
+        firestore = FirebaseFirestore.getInstance();
 
         // Set up toggle behavior for Monthly and Yearly
         setupToggleButtons();
@@ -145,17 +155,15 @@ public class BudgetSetupActivity extends AppCompatActivity {
         submitButton.setOnClickListener(v -> {
             String budgetId = budgetIdInput.getText().toString().trim();
             if (!budgetId.isEmpty()) {
-                // Simulate cloning process
-                //Log.d("BUdget","hiii");
-                Toast.makeText(BudgetSetupActivity.this, budgetId, Toast.LENGTH_SHORT).show();
-                Toast.makeText(BudgetSetupActivity.this, "Budget details saved successfully!", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(BudgetSetupActivity.this, BudgetDisplayActivity.class);
-                intent.putExtra("selectedDateValue", "1");
+
+                //fetchBudgetDetails(budgetId, year);
+
+                Intent intent = new Intent(BudgetSetupActivity.this, BudgetDisplayActivityTemp.class);
+                intent.putExtra("selectedDateValue", month);
                 intent.putExtra("userId", budgetId);
                 startActivity(intent);
                 finish();
-
-                //                FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+                //FirebaseFirestore firestore = FirebaseFirestore.getInstance();
 //
 //
 //                // Reference to the "budget" collection under the specified budgetId, year "2025", and month "1"
@@ -190,10 +198,41 @@ public class BudgetSetupActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    public void copyDb(String budgetId) {
-        // Firestore instance
+    private void fetchBudgetDetails(String budgetId, String year) {
+
+        // Fetch total budget
+        firestore.collection("users")
+                .document(budgetId)
+                .collection("budget")
+                .document(year)
+                .collection(month)
+                .document("total-budget")
+                .get()
+                .addOnSuccessListener(totalBudgetSnapshot -> {
+                    double totalBudget = totalBudgetSnapshot.getDouble("amount");
 
 
+                    // Fetch remaining budget
+                    firestore.collection("users")
+                            .document(budgetId)
+                            .collection("budget")
+                            .document(year)
+                            .collection(month)
+                            .document("total-remaining-budget")
+                            .get()
+                            .addOnSuccessListener(remainingBudgetSnapshot -> {
+                                if (remainingBudgetSnapshot.exists()) {
+                                    double remainingBudget = remainingBudgetSnapshot.getDouble("amount");
+
+                                    // Calculate the percentage
+
+                                } else {
+                                    Toast.makeText(this, "Remaining budget not found!", Toast.LENGTH_SHORT).show();
+                                }
+                            })
+                            .addOnFailureListener(e -> Toast.makeText(this, "Failed to fetch remaining budget.", Toast.LENGTH_SHORT).show());
+                })
+                .addOnFailureListener(e -> Toast.makeText(this, "Failed to fetch total budget.", Toast.LENGTH_SHORT).show());
     }
 
 

@@ -145,26 +145,40 @@ public class IncomeFragment extends Fragment {
             TransactionEntry transactionEntry = new TransactionEntry(amount, date, time, category, paymentMode,note,type);
 
             // Save income entry to Firestore
+            String documentId = firestore.collection("users")
+                    .document(userId)
+                    .collection("income")
+                    .document(year)
+                    .collection(month)
+                    .document()
+                    .getId();  // Get a unique document ID
+
+            // Save both expense and transaction under the same document ID
             firestore.collection("users").document(userId)
                     .collection("income")
                     .document(year)
                     .collection(month)
-                    .add(incomeEntry)
-                    .addOnSuccessListener(documentReference -> {
-                        // Update total income for the user
-                        updateTotalIncome(year, month, amount);
+                    .document(documentId) // Use the same document ID for both entries
+                    .set(incomeEntry) // Save expense entry
+                    .addOnSuccessListener(aVoid -> {
+                        // Save transaction entry under the same document ID
+                        firestore.collection("users").document(userId)
+                                .collection("transaction")
+                                .document(year)
+                                .collection(month)
+                                .document(documentId) // Same document ID for transaction entry
+                                .set(transactionEntry) // Save transaction entry
+                                .addOnSuccessListener(aVoid1 -> {
+                                    // Optionally update total expense and remaining budget after saving both entries
+                                    updateTotalIncome(year, month, amount);
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(getContext(), "Failed to save transaction entry.", Toast.LENGTH_SHORT).show();
+                                });
                     })
-                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save income entry.", Toast.LENGTH_SHORT).show());
-
-
-            firestore.collection("users").document(userId)
-                    .collection("transaction")
-                    .document(year)
-                    .collection(month)
-                    .add(transactionEntry)
-                    .addOnSuccessListener(documentReference -> {
-                    })
-                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save income entry.", Toast.LENGTH_SHORT).show());
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(getContext(), "Failed to save expense entry.", Toast.LENGTH_SHORT).show();
+                    });
 
         } else {
             Toast.makeText(getContext(), "Please enter an amount.", Toast.LENGTH_SHORT).show();

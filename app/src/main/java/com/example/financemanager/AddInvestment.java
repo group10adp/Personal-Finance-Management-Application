@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,6 +28,7 @@ import androidx.fragment.app.FragmentTransaction;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.json.JSONObject;
@@ -184,17 +186,91 @@ public class AddInvestment extends Fragment {
 
                 // Create an InvestmentEntry object
                 InvestmentEntry investmentEntry = new InvestmentEntry(mutualFund, fundCode, returnRate, amount, date, time);
-
+                ExpenseFragment.ExpenseEntry expenseEntry = new ExpenseFragment.ExpenseEntry(amount, date, time, "investment", "Online", "");
+                IncomeFragment.TransactionEntry transactionEntry = new IncomeFragment.TransactionEntry(amount, date, time, "investment", "Online","", "expense");
                 // Save investment entry to Firestore
-                firestore.collection("users").document(userId)
-                        .collection("investment")
+                // Generate a unique document ID
+                String documentId = firestore.collection("users")
+                        .document(userId)
+                        .collection("expense")
                         .document(year)
                         .collection(month)
-                        .add(investmentEntry)
-                        .addOnSuccessListener(documentReference -> {
-                            Toast.makeText(getContext(), "Investment saved successfully!", Toast.LENGTH_SHORT).show();
+                        .document()
+                        .getId(); // Generate a unique document ID
+
+// Save the expense entry
+                firestore.collection("users").document(userId)
+                        .collection("expense")
+                        .document(year)
+                        .collection(month)
+                        .document(documentId) // Use the same document ID
+                        .set(expenseEntry) // Save expense entry
+                        .addOnSuccessListener(aVoid -> {
+                            // Save the investment entry under the same document ID
+                            firestore.collection("users").document(userId)
+                                    .collection("investment")
+                                    .document(year)
+                                    .collection(month)
+                                    .document(documentId) // Reuse the same document ID
+                                    .set(investmentEntry) // Save investment entry
+                                    .addOnSuccessListener(aVoid1 -> {
+                                        // Save the transaction entry under the same document ID
+                                        firestore.collection("users").document(userId)
+                                                .collection("transaction")
+                                                .document(year)
+                                                .collection(month)
+                                                .document(documentId) // Same document ID for transaction entry
+                                                .set(transactionEntry) // Save transaction entry
+                                                .addOnSuccessListener(aVoid2 -> {
+                                                    // Optionally update total expense and remaining budget after saving all entries
+                                                    updateTotalExpense(year, month, amount);
+                                                    Toast.makeText(getContext(), "Investment saved successfully!", Toast.LENGTH_SHORT).show();
+                                                })
+                                                .addOnFailureListener(e -> {
+                                                    Toast.makeText(getContext(), "Failed to save transaction entry.", Toast.LENGTH_SHORT).show();
+                                                });
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Toast.makeText(getContext(), "Failed to save investment entry.", Toast.LENGTH_SHORT).show();
+                                    });
                         })
-                        .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save investment.", Toast.LENGTH_SHORT).show());
+                        .addOnFailureListener(e -> {
+                            Toast.makeText(getContext(), "Failed to save expense entry.", Toast.LENGTH_SHORT).show();
+                        });
+
+
+                firestore.collection("users")
+                        .document(userId)
+                        .collection("budget")
+                        .document(year)
+                        .collection(month)
+                        .document("total-remaining-budget")
+                        .get()
+                        .addOnSuccessListener(remainingBudgetSnapshot -> {
+                            if (remainingBudgetSnapshot.exists()) {
+                                double remainingBudget = remainingBudgetSnapshot.getDouble("amount");
+
+                                firestore.collection("users")
+                                        .document(userId)
+                                        .collection("budget")
+                                        .document(year)
+                                        .collection(month)
+                                        .document("total-remaining-budget")
+                                        .set(new TotalBudgetEntry(remainingBudget-amount)) // Replace with your custom class
+                                        .addOnSuccessListener(aVoid -> Log.d("Firestore", "Remaining budget saved successfully."))
+                                        .addOnFailureListener(e -> {
+                                            Log.e("FirestoreError", "Failed to save remaining budget", e);
+                                            Toast.makeText(getContext(), "Failed to save remaining budget.", Toast.LENGTH_SHORT).show();
+                                        });
+                                saveCategoryData(amount,"investment");
+
+                            } else {
+                                //Toast.makeText(getContext(), "Remaining budget not found!", Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                        .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to fetch remaining budget.", Toast.LENGTH_SHORT).show());
+
+
             } else {
                 Toast.makeText(getContext(), "Please enter an amount.", Toast.LENGTH_SHORT).show();
             }
@@ -212,6 +288,96 @@ public class AddInvestment extends Fragment {
                 }
             }
         });
+    }
+
+    private void saveCategoryData(double amountField, String category1) {
+        if (amountField > 0) {
+            String year = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
+            String month = String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1);
+
+
+            DocumentReference budgetRef = firestore.collection("users")
+                    .document(userId)
+                    .collection("budget")
+                    .document(year)
+                    .collection(month)
+                    .document("category-based-remaining-budget")
+                    .collection(category1)  // Use the category dynamically
+                    .document("remaining-budget-entry");
+            Log.d("categorieee",category1);
+
+            budgetRef.get().addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document != null && document.exists()) {
+                        //Log.d("checkCate0","gfhh");
+                        // Retrieve the remaining budget for the category
+                        Double amount1 = document.getDouble("amount");
+                        //Log.d("checkCate0",""+amount1);
+                        double res= amount1-amountField;
+                        Log.d("checkCate0",""+res);
+                        firestore.collection("users")
+                                .document(userId)
+                                .collection("budget")
+                                .document(year)
+                                .collection(month)
+                                .document("category-based-remaining-budget")  // Document for all category-based remaining budgets
+                                .collection(category1)  // Category name as subcollection
+                                .document("remaining-budget-entry") // Use a static document ID or dynamically generate one
+                                .set(new RemainingBudgetEntry(res))  // Save the remaining budget entry (ensure that RemainingBudgetEntry is properly defined)
+                                .addOnSuccessListener(aVoid -> {
+                                    //Toast.makeText(BudgetDetailsActivity.this, "Remaining budget saved successfully!", Toast.LENGTH_SHORT).show();
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(getContext(), "Failed to save remaining budget entry.", Toast.LENGTH_SHORT).show();
+                                });
+                    }
+                } else {
+                    Log.e("FirestoreError", "Error fetching data for category: " + category1, task.getException());
+                }
+
+            });
+
+// Save category-based remaining budget
+
+
+
+        }
+    }
+
+    private void updateTotalExpense(String year, String month, double newExpense) {
+        DocumentReference totalExpenseDoc = firestore.collection("users").document(userId)
+                .collection("expense").document(year).collection(month).document("totalExpense");
+
+        // Get the current total expense for the month
+        totalExpenseDoc.get().addOnSuccessListener(documentSnapshot -> {
+            double currentTotal = documentSnapshot.exists() ? documentSnapshot.getDouble("total") : 0.0;
+            double updatedTotal = currentTotal + newExpense;
+
+            // Update the total expense for that month
+            totalExpenseDoc.set(Map.of("total", updatedTotal))
+                    .addOnSuccessListener(aVoid -> {
+                        // Update yearly total expense
+                        updateYearlyExpense(year, newExpense);
+                        //Toast.makeText(getContext(), "Expense saved successfully!", Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update monthly total expense.", Toast.LENGTH_SHORT).show());
+        }).addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to load current monthly expense.", Toast.LENGTH_SHORT).show());
+    }
+
+    private void updateYearlyExpense(String year, double newExpense) {
+        DocumentReference yearlyExpenseDoc = firestore.collection("users").document(userId)
+                .collection("expense").document("totalYearlyExpense"); // No need to use the year here
+
+        // Check if the totalYearlyExpense document exists
+        yearlyExpenseDoc.get().addOnSuccessListener(documentSnapshot -> {
+            double currentYearlyTotal = documentSnapshot.exists() ? documentSnapshot.getDouble("total") : 0.0;
+            double updatedYearlyTotal = currentYearlyTotal + newExpense;
+
+            // Set or update the total yearly expense in the document
+            yearlyExpenseDoc.set(Map.of("total", updatedYearlyTotal))
+                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to update yearly expense.", Toast.LENGTH_SHORT).show());
+        }).addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to load current yearly expense.", Toast.LENGTH_SHORT).show());
     }
 
 

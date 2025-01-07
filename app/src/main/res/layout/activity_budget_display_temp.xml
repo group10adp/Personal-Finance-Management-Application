@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@android:color/white">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <com.facebook.shimmer.ShimmerFrameLayout
+            android:id="@+id/shimmerLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:shimmer_auto_start="true">
+
+            <!-- Include the Shimmer Layout Content -->
+            <include layout="@layout/shimmerframelayout" />
+        </com.facebook.shimmer.ShimmerFrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:id="@+id/main"
+            android:visibility="gone">
+
+            <!-- AppBar with Toolbar -->
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="@color/black"
+                android:elevation="4dp"
+                android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+                <ImageView
+                    android:id="@+id/back_arrow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/back_arrow"
+                    android:contentDescription="Back"
+                    android:layout_marginStart="8dp"
+                    android:padding="8dp"
+                    android:tint="@android:color/white" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Budget Analysis"
+                    android:textSize="20sp"
+                    android:textColor="@android:color/white"
+                    android:layout_gravity="center_vertical"
+                    android:paddingStart="16dp" />
+            </androidx.appcompat.widget.Toolbar>
+
+            <!-- Card View with Budget Details -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="8dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:orientation="vertical">
+
+                    <!-- Date and Budget -->
+                    <TextView
+                        android:id="@+id/tv_month_year"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="December 2024"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_budget"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Budget: ₹20,000"
+                        android:textSize="16sp"
+                        android:layout_marginTop="4dp" />
+
+                    <!-- Grid Layout for Budget Details and Progress Bar -->
+                    <GridLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:columnCount="2"
+                        android:rowCount="1"
+                        android:layout_marginTop="16dp">
+
+                        <!-- Total Spent and Available Budget -->
+                        <LinearLayout
+                            android:layout_marginTop="15dp"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_columnWeight="1"
+                            android:orientation="vertical"
+                            android:paddingEnd="8dp">
+
+                            <!-- Total Spent -->
+                            <TextView
+                                android:id="@+id/tv_total_spent_label"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Total Spent"
+                                android:textSize="14sp"
+                                android:textColor="#888888" />
+
+                            <TextView
+                                android:id="@+id/tv_total_spent"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="₹00.0"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+
+                            <!-- Available Budget -->
+                            <TextView
+                                android:id="@+id/tv_available_budget_label"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Available Budget"
+                                android:textSize="14sp"
+                                android:layout_marginTop="12dp"
+                                android:textColor="#888888" />
+
+                            <TextView
+                                android:id="@+id/tv_available_budget"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="₹19,455"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+
+                        <!-- Circular Progress Bar -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_columnWeight="1"
+                            android:orientation="vertical"
+                            android:gravity="center">
+
+                            <com.github.lzyzsd.circleprogress.DonutProgress
+                                android:id="@+id/donutProgress"
+                                android:layout_width="120dp"
+                                android:layout_height="120dp" />
+                        </LinearLayout>
+                    </GridLayout>
+
+                    <!-- Remark -->
+                    <TextView
+                        android:id="@+id/tv_remark"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Great job! You are under your budget."
+                        android:textSize="14sp"
+                        android:textColor="#4CAF50"
+                        android:gravity="center"
+                        android:layout_marginTop="16dp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="16dp"
+                android:layout_margin="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="8dp"
+                android:layout_marginHorizontal="8dp"
+                android:elevation="4dp"
+                android:padding="12dp"
+                android:layout_gravity="center">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center_vertical">
+
+                    <!-- Pie Chart Section -->
+                    <com.github.mikephil.charting.charts.PieChart
+                        android:id="@+id/pieChart"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:layout_marginLeft="10dp"
+                        android:layout_marginRight="10dp"
+                        android:layout_width="200dp"
+                        android:layout_height="200dp"
+                        android:layout_gravity="center" />
+
+                    <!-- Category Information Section -->
+                    <LinearLayout
+                        android:id="@+id/legend_container"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginStart="4dp"
+                        android:weightSum="2"> <!-- Set weight sum to 2 for two items per row -->
+
+                        <!-- Example of a legend item -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+                            <!-- Your legend content here -->
+                        </LinearLayout>
+
+                        <!-- Another legend item -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+                            <!-- Your legend content here -->
+                        </LinearLayout>
+
+                        <!-- Add more legend items as needed -->
+                    </LinearLayout>
+                </LinearLayout>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/legendRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="205dp"
+                    android:padding="8dp" />
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                android:layout_marginHorizontal="8dp"
+                android:layout_margin="16dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="8dp"
+                android:elevation="4dp"
+                android:padding="12dp"
+                android:layout_gravity="center">
+
+                <com.github.mikephil.charting.charts.BarChart
+                    android:id="@+id/barChart"
+                    android:layout_width="match_parent"
+                    android:layout_height="250dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="10dp"
+                    android:layout_gravity="center" />
+            </androidx.cardview.widget.CardView>
+
+
+            <!-- Other CardViews for PieChart and BarChart -->
+            <!-- Existing code remains unchanged -->
+
+            <Button
+                android:id="@+id/copy_code"
+                android:layout_width="match_parent"
+                android:textSize="17dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
+                android:layout_marginBottom="16dp"
+                android:text="Copy budget code"
+                android:textColor="@android:color/white"
+                android:backgroundTint="#282424" />
+        </LinearLayout>
+    </RelativeLayout>
+
+</ScrollView>

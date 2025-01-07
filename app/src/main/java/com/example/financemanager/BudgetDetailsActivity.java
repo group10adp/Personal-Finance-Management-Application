@@ -87,6 +87,7 @@ public class BudgetDetailsActivity extends AppCompatActivity {
         categoryInputInsurance = findViewById(R.id.category_input_insurance);
         categoryInputMoneyTransfer = findViewById(R.id.category_input_money_transfer);
 
+        saveButton.setEnabled(false);
         // Add TextWatchers to update remaining budget
         addTextWatcher(categoryInputOthers);
         addTextWatcher(categoryInputTransport);
@@ -103,6 +104,7 @@ public class BudgetDetailsActivity extends AppCompatActivity {
 
         // Set up the save button
         saveButton.setOnClickListener(view -> saveBudgetData());
+
     }
 
     // Method to add a TextWatcher to each EditText
@@ -146,6 +148,8 @@ public class BudgetDetailsActivity extends AppCompatActivity {
         // Update the remaining budget
         remainingBudget = totalBudget - spentAmount;
         remainingBudgetTextView.setText("₹" + remainingBudget);
+
+        saveButton.setEnabled(remainingBudget == 0);
     }
 
     // Helper method to get the value from each EditText, considering empty fields as 0
@@ -243,6 +247,7 @@ public class BudgetDetailsActivity extends AppCompatActivity {
         Intent intent = new Intent(BudgetDetailsActivity.this, BudgetDisplayActivity.class);
         intent.putExtra("selectedDateValue", month);
         intent.putExtra("userId", userId);
+        intent.putExtra("budget", totalBudget);
         startActivity(intent);
         finish();
     }

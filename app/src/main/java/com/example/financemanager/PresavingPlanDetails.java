@@ -79,7 +79,7 @@ public class PresavingPlanDetails extends AppCompatActivity {
                 .build();
 
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://4f1a-45-64-224-104.ngrok-free.app/")
+                .baseUrl("https://8118-45-64-224-104.ngrok-free.app/")
                 .client(client)  // Set custom OkHttpClient
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
@@ -122,16 +122,16 @@ public class PresavingPlanDetails extends AppCompatActivity {
 
                         // Separate StringBuilder for summary data
                         StringBuilder summaryData = new StringBuilder();
-                        summaryData.append("Goal: ").append(goalItem).append("\n")
-                                .append("Monthly Savings EMI: ").append(monthlySavingsEmi).append("\n")
-                                .append("Time Span: ").append(timeSpan).append("\n")
-                                .append("Total Savings Goal: ").append(goalAmount).append("\n");
+                        summaryData.append("Goal:  ").append(goalItem).append("\n")
+                                .append("Monthly Savings EMI:  ₹").append(monthlySavingsEmi).append("\n")
+                                .append("Time Span:  ").append(timeSpan).append(" months\n")
+                                .append("Total Savings Goal:  ₹").append(goalAmount).append("\n");
 
                         // Now, you have the data separated:
                         // budgetAnalysisData for budget analysis info
                         // summaryData for summary info
-                        text_content.setText(budgetAnalysisData.toString());
-                        text_details.setText(summaryData.toString());
+                        text_details.setText(budgetAnalysisData.toString());
+                        text_content.setText(summaryData.toString());
                         progressDialog.dismiss();
 
 

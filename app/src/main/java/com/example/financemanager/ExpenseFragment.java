@@ -116,7 +116,7 @@ public class ExpenseFragment extends Fragment {
             loadingDialog.show();
 
             // Simulate saving operation or dismiss dialog after completion
-            new Handler().postDelayed(() -> loadingDialog.dismiss(), 2500); // Dismiss after 2 seconds (example)
+            new Handler().postDelayed(() -> loadingDialog.dismiss(), 3000); // Dismiss after 2 seconds (example)
         });
 
         return view;
@@ -150,25 +150,40 @@ public class ExpenseFragment extends Fragment {
                             IncomeFragment.TransactionEntry transactionEntry = new IncomeFragment.TransactionEntry(amount, date, time, category, paymentMode, note, type);
 
                             // Save expense entry to Firestore
+                            String documentId = firestore.collection("users")
+                                    .document(userId)
+                                    .collection("expense")
+                                    .document(year)
+                                    .collection(month)
+                                    .document()
+                                    .getId();  // Get a unique document ID
+
+                            // Save both expense and transaction under the same document ID
                             firestore.collection("users").document(userId)
                                     .collection("expense")
                                     .document(year)
                                     .collection(month)
-                                    .add(expenseEntry)
-                                    .addOnSuccessListener(documentReference -> {
-                                        // Update total expense for the user
-                                        updateTotalExpense(year, month, amount);
+                                    .document(documentId) // Use the same document ID for both entries
+                                    .set(expenseEntry) // Save expense entry
+                                    .addOnSuccessListener(aVoid -> {
+                                        // Save transaction entry under the same document ID
+                                        firestore.collection("users").document(userId)
+                                                .collection("transaction")
+                                                .document(year)
+                                                .collection(month)
+                                                .document(documentId) // Same document ID for transaction entry
+                                                .set(transactionEntry) // Save transaction entry
+                                                .addOnSuccessListener(aVoid1 -> {
+                                                    // Optionally update total expense and remaining budget after saving both entries
+                                                    updateTotalExpense(year, month, amount);
+                                                })
+                                                .addOnFailureListener(e -> {
+                                                    Toast.makeText(getContext(), "Failed to save transaction entry.", Toast.LENGTH_SHORT).show();
+                                                });
                                     })
-                                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save expense entry.", Toast.LENGTH_SHORT).show());
-
-                            firestore.collection("users").document(userId)
-                                    .collection("transaction")
-                                    .document(year)
-                                    .collection(month)
-                                    .add(transactionEntry)
-                                    .addOnSuccessListener(documentReference -> {
-                                    })
-                                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to save income entry.", Toast.LENGTH_SHORT).show());
+                                    .addOnFailureListener(e -> {
+                                        Toast.makeText(getContext(), "Failed to save expense entry.", Toast.LENGTH_SHORT).show();
+                                    });
 
 
                             firestore.collection("users")
@@ -197,7 +212,7 @@ public class ExpenseFragment extends Fragment {
                                             saveCategoryData(amount,category);
 
                                         } else {
-                                            Toast.makeText(getContext(), "Remaining budget not found!", Toast.LENGTH_SHORT).show();
+                                            //Toast.makeText(getContext(), "Remaining budget not found!", Toast.LENGTH_SHORT).show();
                                         }
                                     })
                                     .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to fetch remaining budget.", Toast.LENGTH_SHORT).show());
@@ -289,7 +304,10 @@ public class ExpenseFragment extends Fragment {
                         listener.onValidationComplete(isValidBudget);
 
                     } else {
-                        Toast.makeText(getContext(), "Remaining budget not found!", Toast.LENGTH_SHORT).show();
+
+                        boolean isValidBudget = true;
+                        // Pass the result to the listener
+                        listener.onValidationComplete(isValidBudget);
                     }
                 })
                 .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to fetch remaining budget.", Toast.LENGTH_SHORT).show());
