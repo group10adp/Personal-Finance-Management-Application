@@ -60,6 +60,9 @@
             android:name=".SignUp"
             android:exported="false" />
         <activity
+            android:name=".ForgotPass"
+            android:exported="false" />
+        <activity
             android:name=".splashActivity"
             android:exported="true"
             android:theme="@style/Theme.Design.NoActionBar">
