@@ -180,7 +180,7 @@ public class AddInvestment extends Fragment {
                 // Get current year and month
                 String[] dateParts = date.split(" ");
                 String year = dateParts[2];
-                String month = String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1); // Get the current month in MM format
+                String month = getMonthNumber(dateParts[1]); // Get the current month in MM format
 
                 // Create an InvestmentEntry object
                 InvestmentEntry investmentEntry = new InvestmentEntry(mutualFund, fundCode, returnRate, amount, date, time);
@@ -348,6 +348,18 @@ public class AddInvestment extends Fragment {
                 hour, minute, false);
 
         timePickerDialog.show();
+    }
+
+    private String getMonthNumber(String monthName) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("MMM", Locale.ENGLISH); // "MMM" is for short month names
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(sdf.parse(monthName)); // Parse month name
+            return String.valueOf(cal.get(Calendar.MONTH) + 1); // Calendar months are 0-indexed, so add 1
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "1"; // Return -1 in case of an error
+        }
     }
 
     public static class InvestmentEntry {

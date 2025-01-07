@@ -22,6 +22,23 @@
             android:textColor="#121212" />
     </androidx.appcompat.widget.Toolbar>
 
+    <com.facebook.shimmer.ShimmerFrameLayout
+        android:id="@+id/shimmerLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:shimmer_auto_start="true">
+
+        <!-- Include the Shimmer Layout Content -->
+        <include layout="@layout/shimmerframelayout" />
+    </com.facebook.shimmer.ShimmerFrameLayout>
+
+    <LinearLayout
+        android:id="@+id/mainContent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:visibility="gone">
+
     <!-- RecyclerView to display investment cards -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view_investments"
@@ -29,6 +46,8 @@
         android:layout_height="match_parent"
         android:layout_marginTop="56dp"
         android:padding="8dp" />
+
+    </LinearLayout>
 
     <!-- FloatingActionButton to add new investments -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -43,6 +62,8 @@
         android:backgroundTint="#E8DBFD"
         android:contentDescription="Add investment"
         app:srcCompat="@android:drawable/ic_input_add" />
+
+
 </FrameLayout>
 
 

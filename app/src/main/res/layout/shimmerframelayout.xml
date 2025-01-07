@@ -6,50 +6,14 @@
     app:shimmer_auto_start="true">
 
     <LinearLayout
+        android:layout_marginTop="50dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp">
 
         <!-- Shimmer for Greeting and Profile Section -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
 
-            <View
-                android:layout_width="200dp"
-                android:layout_height="20dp"
-                android:background="#E0E0E0"
-                android:layout_marginEnd="8dp" />
-
-            <View
-                android:layout_width="46dp"
-                android:layout_height="46dp"
-                android:background="#E0E0E0"
-                android:layout_gravity="end"
-                android:layout_marginLeft="112dp" />
-        </LinearLayout>
-
-        <!-- Shimmer for This Month Section -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="16dp">
-
-            <View
-                android:layout_width="100dp"
-                android:layout_height="20dp"
-                android:background="#E0E0E0" />
-
-            <View
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:background="#E0E0E0"
-                android:layout_marginStart="3dp"
-                android:layout_marginTop="4dp" />
-        </LinearLayout>
 
         <!-- Shimmer for Spending and Income Indicators -->
         <LinearLayout
@@ -63,21 +27,21 @@
                 android:layout_width="0dp"
                 android:layout_height="60dp"
                 android:layout_weight="1"
-                android:background="#E0E0E0"
+                android:background="#CCCACA"
                 android:layout_marginEnd="8dp" />
 
             <View
                 android:layout_width="0dp"
                 android:layout_height="60dp"
                 android:layout_weight="1"
-                android:background="#E0E0E0" />
+                android:background="#CCCACA" />
         </LinearLayout>
 
         <!-- Shimmer for Balance Section -->
         <View
             android:layout_width="200dp"
             android:layout_height="20dp"
-            android:background="#E0E0E0"
+            android:background="#CCCACA"
             android:layout_gravity="center"
             android:layout_marginTop="14dp"
             android:layout_marginBottom="10dp" />
@@ -93,12 +57,12 @@
                 android:layout_width="0dp"
                 android:layout_height="20dp"
                 android:layout_weight="1"
-                android:background="#E0E0E0" />
+                android:background="#CCCACA" />
 
             <View
                 android:layout_width="50dp"
                 android:layout_height="20dp"
-                android:background="#E0E0E0" />
+                android:background="#CCCACA" />
         </LinearLayout>
 
         <!-- Shimmer for RecyclerView Placeholder -->
@@ -107,39 +71,62 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_marginTop="10dp">
-
             <View
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:background="#E0E0E0"
+                android:background="#CCCACA"
                 android:layout_marginBottom="10dp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:background="#E0E0E0"
+                android:background="#CCCACA"
                 android:layout_marginBottom="10dp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:background="#E0E0E0"
+                android:background="#CCCACA"
                 android:layout_marginBottom="10dp" />
             <View
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:background="#E0E0E0"
+                android:background="#CCCACA"
                 android:layout_marginBottom="10dp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:background="#E0E0E0"
+                android:background="#CCCACA"
+                android:layout_marginBottom="10dp" />
+
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="#CCCACA"
+                android:layout_marginBottom="10dp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="#CCCACA"
                 android:layout_marginBottom="10dp" />
             <View
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
-                android:background="#E0E0E0"
+                android:background="#CCCACA"
+                android:layout_marginBottom="10dp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="#CCCACA"
+                android:layout_marginBottom="10dp" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="#CCCACA"
                 android:layout_marginBottom="10dp" />
 
         </LinearLayout>

@@ -2,6 +2,7 @@ package com.example.financemanager;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,14 +13,21 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+
+import com.facebook.shimmer.ShimmerFrameLayout;
 
 public class PresavingplanFragment extends Fragment {
 
     private EditText itemNameInput, approxPriceInput, timeLimitInput;
     private Button submitButton;
     private Spinner categorySpinner;
+
+    private ShimmerFrameLayout shimmerLayout;
+    private View mainContent;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -88,6 +96,41 @@ public class PresavingplanFragment extends Fragment {
         return view;
     }
 
-    // Method to validate input fields
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        // Initialize shimmer and main content views
+        shimmerLayout = view.findViewById(R.id.shimmerLayout);
+        mainContent = view.findViewById(R.id.mainContent);
+
+        // Start shimmer effect
+        shimmerLayout.startShimmer();
+
+        // Simulate data loading (replace with real logic)
+        new Handler().postDelayed(() -> {
+            // Stop shimmer effect and show main content
+            shimmerLayout.stopShimmer();
+            shimmerLayout.setVisibility(View.GONE);
+            mainContent.setVisibility(View.VISIBLE);
+        }, 2700); // Simulated delay of 3 seconds
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        // Stop shimmer when the fragment is paused
+        if (shimmerLayout != null) {
+            shimmerLayout.stopShimmer();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Restart shimmer when the fragment is resumed
+        if (shimmerLayout != null) {
+            shimmerLayout.startShimmer();
+        }
+    }
 
 }

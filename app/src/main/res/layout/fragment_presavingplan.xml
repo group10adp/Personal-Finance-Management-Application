@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/nav_chatbot"
     tools:context=".PresavingplanFragment">
 
@@ -21,13 +22,17 @@
             android:textColor="#121212" />
     </androidx.appcompat.widget.Toolbar>
 
-    <ScrollView
+    <LinearLayout
+        android:id="@+id/mainContent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="56dp"
-        android:padding="16dp">
+        android:orientation="vertical"
+        android:visibility="gone">
 
-        <LinearLayout
+
+    <LinearLayout
+            android:layout_marginTop="56dp"
+            android:padding="16dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
@@ -109,6 +114,17 @@
 
         </LinearLayout>
 
-    </ScrollView>
+    </LinearLayout>
+
+    <com.facebook.shimmer.ShimmerFrameLayout
+        android:id="@+id/shimmerLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:shimmer_auto_start="true">
+
+        <!-- Include the Shimmer Layout Content -->
+        <include layout="@layout/shimmerframelayout" />
+    </com.facebook.shimmer.ShimmerFrameLayout>
+
 
 </FrameLayout>

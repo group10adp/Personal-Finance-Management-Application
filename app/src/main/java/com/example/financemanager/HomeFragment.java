@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,11 +16,13 @@ import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.facebook.shimmer.ShimmerFrameLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -60,6 +63,9 @@ public class HomeFragment extends Fragment {
     private TransactionAdapter incomeAdapter;
     private List<TransactionModel> incomeList;
     TextView popUpText;
+    private ShimmerFrameLayout shimmerLayout;
+    private View mainContent;
+
 
 
     @SuppressLint("MissingInflatedId")
@@ -384,5 +390,43 @@ public class HomeFragment extends Fragment {
                     }
                 });
     }
+
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        // Initialize shimmer and main content views
+        shimmerLayout = view.findViewById(R.id.shimmerLayout);
+        mainContent = view.findViewById(R.id.mainContent);
+
+        // Start shimmer effect
+        shimmerLayout.startShimmer();
+
+        // Simulate data loading (replace with real logic)
+        new Handler().postDelayed(() -> {
+            // Stop shimmer effect and show main content
+            shimmerLayout.stopShimmer();
+            shimmerLayout.setVisibility(View.GONE);
+            mainContent.setVisibility(View.VISIBLE);
+        }, 2700); // Simulated delay of 3 seconds
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        // Stop shimmer when the fragment is paused
+        if (shimmerLayout != null) {
+            shimmerLayout.stopShimmer();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Restart shimmer when the fragment is resumed
+        if (shimmerLayout != null) {
+            shimmerLayout.startShimmer();
+        }
+    }
+
 
 }

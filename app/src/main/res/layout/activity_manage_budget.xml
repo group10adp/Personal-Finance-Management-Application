@@ -7,6 +7,21 @@
     android:fillViewport="true"
     android:background="@android:color/white">
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+    <com.facebook.shimmer.ShimmerFrameLayout
+        android:id="@+id/shimmerLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:shimmer_auto_start="true"
+        android:visibility="gone">
+
+        <!-- Include the Shimmer Layout Content -->
+        <include layout="@layout/shimmerframelayout" />
+    </com.facebook.shimmer.ShimmerFrameLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -51,4 +66,6 @@
             android:padding="8dp" />
 
     </LinearLayout>
+
+    </RelativeLayout>
 </ScrollView>

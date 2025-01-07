@@ -8,7 +8,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -22,6 +24,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.facebook.shimmer.ShimmerFrameLayout;
 import com.github.lzyzsd.circleprogress.DonutProgress;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.PieChart;
@@ -62,6 +65,9 @@ public class BudgetDisplayActivity extends AppCompatActivity {
     Button copy_code;
     private double totalIncome = 0.0, totalExpense = 0.0;
 
+    private ShimmerFrameLayout shimmerLayout;
+    private View mainContent;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,7 +78,7 @@ public class BudgetDisplayActivity extends AppCompatActivity {
 
         auth = FirebaseAuth.getInstance();
         userId = intent.getStringExtra("userId"); // Get userId from the intent
-        //Log.d("userId66","jjjj");
+
         auth = FirebaseAuth.getInstance();
 
 // Check if userId is provided via intent
@@ -81,6 +87,20 @@ public class BudgetDisplayActivity extends AppCompatActivity {
         }
         year = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
 //        month = String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1);
+
+        shimmerLayout =findViewById(R.id.shimmerLayout);
+        mainContent = findViewById(R.id.main);
+
+        // Start shimmer effect
+        shimmerLayout.startShimmer();
+
+        // Simulate data loading (replace with real logic)
+        new Handler().postDelayed(() -> {
+            // Stop shimmer effect and show main content
+            shimmerLayout.stopShimmer();
+            shimmerLayout.setVisibility(View.GONE);
+            mainContent.setVisibility(View.VISIBLE);
+        }, 3000); // Simulated delay of 3 seconds
 
         pieChart = findViewById(R.id.pieChart);
         barChart = findViewById(R.id.barChart);
@@ -543,6 +563,18 @@ public class BudgetDisplayActivity extends AppCompatActivity {
 
         // Refresh the chart
         barChart.invalidate();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        shimmerLayout.stopShimmer();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        shimmerLayout.startShimmer();
     }
 
 }

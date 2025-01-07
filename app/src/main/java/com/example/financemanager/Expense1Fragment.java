@@ -134,12 +134,19 @@ public class Expense1Fragment extends Fragment {
         ArrayList<BarEntry> entries = new ArrayList<>();
         entries.add(new BarEntry(0, (float) 50));
         entries.add(new BarEntry(1, (float) 50));
+        entries.add(new BarEntry(0, (float) 50));
+        entries.add(new BarEntry(1, (float) 50));
+        entries.add(new BarEntry(0, (float) 50));
+        entries.add(new BarEntry(1, (float) 50));
+        entries.add(new BarEntry(0, (float) 50));
+        entries.add(new BarEntry(1, (float) 50));
+        entries.add(new BarEntry(0, (float) 50));
+        entries.add(new BarEntry(1, (float) 50));
 
         // Bar chart dataset
         BarDataSet barDataSet = new BarDataSet(entries, "Income vs Spending");
         barDataSet.setColors(
-                Color.parseColor("#43A047"), // Green shade
-                Color.parseColor("#E53935")  // Red shade
+                Color.parseColor("#FFBF00")
         ); // Custom colors
         barDataSet.setValueTextColor(Color.WHITE);
         barDataSet.setValueTextSize(12f);

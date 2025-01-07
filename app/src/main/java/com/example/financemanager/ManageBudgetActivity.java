@@ -1,7 +1,9 @@
 package com.example.financemanager;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -10,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.facebook.shimmer.ShimmerFrameLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -28,6 +31,8 @@ public class ManageBudgetActivity extends AppCompatActivity {
     private BudgetAdapter adapter;
     private List<Budget> budgets;
     String userId;
+    private ShimmerFrameLayout shimmerLayout;
+    private View mainContent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +49,20 @@ public class ManageBudgetActivity extends AppCompatActivity {
         budgets = new ArrayList<>();
         adapter = new BudgetAdapter(this, budgets);
         recyclerView.setAdapter(adapter);
+
+        shimmerLayout =findViewById(R.id.shimmerLayout);
+        mainContent = findViewById(R.id.main);
+
+        // Start shimmer effect
+        shimmerLayout.startShimmer();
+
+        // Simulate data loading (replace with real logic)
+        new Handler().postDelayed(() -> {
+            // Stop shimmer effect and show main content
+            shimmerLayout.stopShimmer();
+            shimmerLayout.setVisibility(View.GONE);
+            mainContent.setVisibility(View.VISIBLE);
+        }, 3000); // Simulated delay of 3 seconds
 
         // Fetch budget data
         fetchBudgetData();
@@ -95,6 +114,18 @@ public class ManageBudgetActivity extends AppCompatActivity {
                 "July", "August", "September", "October", "November", "December"
         };
         return "Month: "+months[month - 1];
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        shimmerLayout.stopShimmer();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        shimmerLayout.startShimmer();
     }
 
 }

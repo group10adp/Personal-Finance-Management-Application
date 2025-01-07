@@ -1,9 +1,12 @@
 package com.example.financemanager;
 
+import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -28,9 +31,20 @@ public class InvestmentAdapter extends RecyclerView.Adapter<InvestmentAdapter.In
     @Override
     public void onBindViewHolder(@NonNull InvestmentViewHolder holder, int position) {
         Investment investment = investments.get(position);
-        holder.mutualFundName.setText(investment.getMutualFundName());
+        holder.mutualFundName.setText(investment.getMutualFund());
         holder.returnRate.setText("Return Rate: "+investment.getReturnRate());
         holder.amount.setText("Amount: ₹"+investment.getAmount());
+
+        holder.itemView.setOnClickListener(v -> {
+
+            Context context = holder.itemView.getContext();
+            // Show a toast with the document ID
+            String docId = investment.getDocId() != null ? investment.getDocId() : "";
+            Intent intent = new Intent(context,InvestmentView.class);
+            intent.putExtra("docId", docId);
+            context.startActivity(intent);
+//            Toast.makeText(holder.itemView.getContext(), "Doc ID: " + docId, Toast.LENGTH_SHORT).show();
+        });
     }
 
     @Override

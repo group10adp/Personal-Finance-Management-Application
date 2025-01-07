@@ -41,7 +41,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:elevation="4dp"
-        app:cardCornerRadius="8dp">
+        app:cardCornerRadius="16dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -49,14 +49,12 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Text Content -->
-            <TextView
-                android:id="@+id/text_content"
+            <!-- Container for dynamic TextViews -->
+            <LinearLayout
+                android:id="@+id/text_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="This is your AI-driven budget recommendation."
-                android:textSize="16sp"
-                android:textColor="@android:color/black"
+                android:orientation="vertical"
                 android:layout_marginBottom="16dp" />
 
             <!-- Apply Button -->

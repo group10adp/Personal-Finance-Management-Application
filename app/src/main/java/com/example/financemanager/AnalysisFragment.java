@@ -1,6 +1,7 @@
 package com.example.financemanager;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -14,9 +15,13 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.facebook.shimmer.ShimmerFrameLayout;
+
 public class AnalysisFragment extends Fragment {
 
     TextView popUpText;
+    private ShimmerFrameLayout shimmerLayout;
+    private View mainContent;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -36,6 +41,20 @@ public class AnalysisFragment extends Fragment {
 
         ImageView dropDown = view.findViewById(R.id.dropDown);
         popUpText=view.findViewById(R.id.popUpText);
+
+        shimmerLayout = view.findViewById(R.id.shimmerLayout);
+        mainContent = view.findViewById(R.id.mainContent);
+
+        // Start shimmer effect
+        shimmerLayout.startShimmer();
+
+        // Simulate data loading (replace with real logic)
+        new Handler().postDelayed(() -> {
+            // Stop shimmer effect and show main content
+            shimmerLayout.stopShimmer();
+            shimmerLayout.setVisibility(View.GONE);
+            mainContent.setVisibility(View.VISIBLE);
+        }, 2700); // Simulated delay of 3 seconds
 
         dropDown.setOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(requireContext(), v);
@@ -69,4 +88,23 @@ public class AnalysisFragment extends Fragment {
 
 
     }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        // Stop shimmer when the fragment is paused
+        if (shimmerLayout != null) {
+            shimmerLayout.stopShimmer();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Restart shimmer when the fragment is resumed
+        if (shimmerLayout != null) {
+            shimmerLayout.startShimmer();
+        }
+    }
+
 }
